@@ -1,0 +1,1246 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.office-wrap { padding: 1.25rem 1.25rem 2rem; color: #1f2937; }
+html.dark .office-wrap { color: #e5e7eb; }
+.office-head { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; margin-bottom: 1rem; }
+.office-head h1 { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+.office-head p { margin: 0; font-size: .8125rem; color: #6b7280; }
+html.dark .office-head p { color: #9ca3af; }
+.office-head .grow { flex: 1 1 auto; min-width: 12rem; }
+.office-live { display: inline-flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 600; padding: .3rem .65rem; border-radius: 999px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.office-live::before { content: ''; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 0 currentColor; animation: office-pulse 1.8s infinite; }
+.office-live.is-off { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.office-live.is-off::before { animation: none; }
+.office-live.is-sim { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+html.dark .office-live { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.35); color: #6ee7b7; }
+html.dark .office-live.is-off { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.35); color: #fca5a5; }
+html.dark .office-live.is-sim { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); color: #fcd34d; }
+@keyframes office-pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+.office-btn { font: inherit; font-size: .8125rem; font-weight: 600; padding: .45rem .8rem; border-radius: .6rem; border: 1px solid #d1d5db; background: #fff; color: inherit; cursor: pointer; }
+.office-btn:hover { background: #f9fafb; }
+.office-btn[aria-pressed="true"] { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+html.dark .office-btn { background: #1f2937; border-color: #374151; }
+html.dark .office-btn:hover { background: #273244; }
+html.dark .office-btn[aria-pressed="true"] { background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.5); color: #fcd34d; }
+
+.office-grid { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1rem; align-items: start; }
+@media (max-width: 1100px) { .office-grid { grid-template-columns: minmax(0, 1fr); } }
+.office-stage { position: relative; border-radius: 1rem; overflow: hidden; border: 1px solid #e5e7eb; background: #efeae1; min-height: 16rem; }
+html.dark .office-stage { border-color: #1f2937; background: #0d1016; }
+.office-stage canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: default; touch-action: manipulation; }
+.office-empty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 2rem; font-size: .875rem; color: #6b7280; }
+.office-empty.show { display: flex; }
+.office-tip { position: absolute; pointer-events: none; z-index: 5; max-width: 18rem; padding: .55rem .7rem; border-radius: .6rem; font-size: .75rem; line-height: 1.35; background: rgba(17,24,39,.94); color: #f9fafb; box-shadow: 0 8px 24px rgba(0,0,0,.25); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
+.office-tip.show { opacity: 1; transform: none; }
+.office-tip b { font-size: .8125rem; }
+.office-tip .muted { color: #9ca3af; }
+.office-tip code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .7rem; word-break: break-word; }
+
+.office-side { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.office-card { border-radius: 1rem; border: 1px solid #e5e7eb; background: #fff; padding: .9rem 1rem; }
+html.dark .office-card { border-color: #1f2937; background: #111827; }
+.office-card h2 { margin: 0 0 .6rem; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+html.dark .office-card h2 { color: #9ca3af; }
+.office-roster, .office-feed, .office-legend { list-style: none; margin: 0; padding: 0; }
+.office-roster li { display: grid; grid-template-columns: auto minmax(0,1fr); gap: .15rem .6rem; align-items: center; padding: .45rem .5rem; margin: 0 -.5rem; border-radius: .6rem; cursor: pointer; }
+.office-roster li:hover, .office-roster li.is-hot { background: #f3f4f6; }
+html.dark .office-roster li:hover, html.dark .office-roster li.is-hot { background: #1f2937; }
+.office-swatch { width: 1.6rem; height: 1.6rem; border-radius: .5rem; grid-row: span 2; image-rendering: pixelated; }
+.office-name { font-size: .8125rem; font-weight: 600; display: flex; align-items: center; gap: .4rem; min-width: 0; }
+.office-name span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.office-chip { flex: none; font-size: .625rem; font-weight: 700; padding: .1rem .4rem; border-radius: 999px; color: #fff; letter-spacing: .02em; }
+.office-detail { font-size: .7rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+html.dark .office-detail { color: #9ca3af; }
+.office-feed { max-height: 18rem; overflow-y: auto; font-size: .72rem; }
+.office-feed li { display: grid; grid-template-columns: 3.4rem minmax(0,1fr); gap: .5rem; padding: .3rem 0; border-top: 1px solid #f3f4f6; }
+html.dark .office-feed li { border-top-color: #1f2937; }
+.office-feed li:first-child { border-top: 0; }
+.office-feed time { color: #9ca3af; font-variant-numeric: tabular-nums; }
+.office-feed .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.office-feed .who { font-weight: 600; }
+.office-legend { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem .75rem; font-size: .72rem; }
+.office-legend li { display: flex; align-items: center; gap: .45rem; }
+.office-legend canvas { width: 22px; height: 18px; image-rendering: pixelated; flex: none; }
+.office-hint { font-size: .7rem; color: #9ca3af; margin-top: .6rem; }
+</style>
+
+<div class="office-wrap">
+  <div class="office-head">
+    <div class="grow">
+      <h1>Office</h1>
+      <p>Every agent at its desk, live. Click someone to open their chat.</p>
+    </div>
+    <span id="office-live" class="office-live is-off">Connecting…</span>
+    <button id="office-sim" class="office-btn" type="button" aria-pressed="false" title="Play made-up activity so you can see the animations. Nothing is sent to your agents.">Simulate activity</button>
+  </div>
+
+  <div class="office-grid">
+    <div id="office-stage" class="office-stage">
+      <canvas id="office-canvas" width="640" height="360" aria-label="Office floor showing what each agent is doing"></canvas>
+      <div id="office-empty" class="office-empty">No agents yet. Create one, or press “Simulate activity” to preview the office.</div>
+      <div id="office-tip" class="office-tip" role="status"></div>
+    </div>
+
+    <aside class="office-side">
+      <section class="office-card">
+        <h2>Agents</h2>
+        <ul id="office-roster" class="office-roster"></ul>
+      </section>
+      <section class="office-card">
+        <h2>Legend</h2>
+        <ul id="office-legend" class="office-legend"></ul>
+        <div class="office-hint">Idle agents grab a coffee, then nap in the lounge. When one agent messages another, it walks over to that agent’s desk.</div>
+      </section>
+      <section class="office-card">
+        <h2>Activity</h2>
+        <ol id="office-feed" class="office-feed"></ol>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ───────────────────────── constants ───────────────────────── */
+const T = 16;                 // tile size in world pixels
+const SPEED = 3.4;            // tiles per second
+const BUBBLE_MS = 7000;       // how long a new action shows its speech bubble
+const IDLE_GRACE_MS = 2500;   // wait before an idle agent leaves its desk
+const COFFEE_MS = 4500;
+const VISIT_DWELL_MS = 5000;
+
+const STATE_META = {
+  idle:     { label: 'Idle',              color: '#9ca3af' },
+  thinking: { label: 'Thinking',          color: '#6366f1' },
+  terminal: { label: 'Running command',   color: '#10b981' },
+  file:     { label: 'Working on a file', color: '#0ea5e9' },
+  tool:     { label: 'Using a tool',      color: '#a855f7' },
+  visiting: { label: 'Messaging agent',   color: '#f59e0b' },
+  approval: { label: 'Needs approval',    color: '#ef4444' },
+  asking:   { label: 'Asking you',        color: '#ec4899' },
+  replying: { label: 'Replying',          color: '#14b8a6' },
+};
+const WORKING = new Set(['thinking', 'terminal', 'file', 'tool', 'replying', 'visiting']);
+
+const THEMES = {
+  light: {
+    void: '#efeae1', hall: ['#ebe6dc', '#e2dccf'], hallLine: '#d6cfc0',
+    wood: ['#dcbf93', '#d4b586'], woodLine: '#c4a273',
+    carpet: ['#bcd5c4', '#b4cebc'], rug: '#e7c86e', rugEdge: '#c9a94e',
+    wallTop: '#6f665c', wallFace: '#a89b8d', wallTrim: '#8f8376', wallText: '#7a6f63',
+    window: '#bfe3f5', windowFrame: '#f6f3ee', door: '#c9b9a6',
+    desk: '#8b5e3c', deskTop: '#ab7748', deskEdge: '#6e472b',
+    chair: '#3f4652', chairSeat: '#5d6573',
+    couch: '#c0564b', couchDark: '#9e4239', couchLight: '#d26c61',
+    plant: '#3f8f4f', plantDark: '#2f6e3c', pot: '#b4643c',
+    counter: '#9aa3ad', counterTop: '#c3cad1', machine: '#3b3f46',
+    table: '#a07040', tableTop: '#bd8a55',
+    label: 'rgba(255,255,255,.93)', labelText: '#111827', labelBorder: 'rgba(17,24,39,.12)',
+    shadow: 'rgba(0,0,0,.18)',
+  },
+  dark: {
+    void: '#0d1016', hall: ['#2a2f39', '#262a33'], hallLine: '#20242c',
+    wood: ['#584533', '#503e2e'], woodLine: '#433427',
+    carpet: ['#25403a', '#213a34'], rug: '#7a6326', rugEdge: '#5e4c1d',
+    wallTop: '#0b0d12', wallFace: '#2b303c', wallTrim: '#1c2029', wallText: 'rgba(229,231,235,.85)',
+    window: '#1d3a52', windowFrame: '#3d4554', door: '#3b4250',
+    desk: '#5b3d27', deskTop: '#77522f', deskEdge: '#3d2919',
+    chair: '#151a22', chairSeat: '#2c3442',
+    couch: '#8a3b33', couchDark: '#6b2c26', couchLight: '#a2483f',
+    plant: '#2f7a40', plantDark: '#215a2f', pot: '#8a4a2c',
+    counter: '#4b5563', counterTop: '#5f6b7a', machine: '#1a1d22',
+    table: '#5f4127', tableTop: '#7b5634',
+    label: 'rgba(17,24,39,.9)', labelText: '#f3f4f6', labelBorder: 'rgba(255,255,255,.12)',
+    shadow: 'rgba(0,0,0,.4)',
+  },
+};
+
+/* ───────────────────────── dom ───────────────────────── */
+const stage = document.getElementById('office-stage');
+const canvas = document.getElementById('office-canvas');
+const ctx = canvas.getContext('2d');
+const tip = document.getElementById('office-tip');
+const liveEl = document.getElementById('office-live');
+const simBtn = document.getElementById('office-sim');
+const rosterEl = document.getElementById('office-roster');
+const feedEl = document.getElementById('office-feed');
+const legendEl = document.getElementById('office-legend');
+const emptyEl = document.getElementById('office-empty');
+
+const world = document.createElement('canvas');
+const wctx = world.getContext('2d');
+const bg = document.createElement('canvas');
+
+let theme = isDark() ? THEMES.dark : THEMES.light;
+function isDark() { return document.documentElement.classList.contains('dark'); }
+
+/* ───────────────────────── helpers ───────────────────────── */
+function hash(s) {
+  let h = 2166136261;
+  s = String(s);
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const SKINS = ['#f6d3b3', '#eabf95', '#d7a06e', '#b07a4f', '#8a5a36', '#5e3b22'];
+const HAIRS = ['#2b1d14', '#5a3a22', '#8b5a2b', '#d9b26a', '#1c1c1c', '#b5462f', '#e6e1d8', '#3b3f6e'];
+const PANTS = ['#2f3a56', '#3b3b3b', '#5b4636', '#2e4a3f'];
+function looks(id) {
+  const h = hash(id), hue = (h >>> 8) % 360;
+  return {
+    skin: SKINS[h % SKINS.length], hair: HAIRS[(h >>> 4) % HAIRS.length],
+    shirt: `hsl(${hue} 62% 52%)`, shirtDark: `hsl(${hue} 55% 38%)`,
+    pants: PANTS[(h >>> 17) % PANTS.length], hairStyle: (h >>> 20) % 3,
+  };
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function ago(ts) {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 5) return 'now';
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s / 60) + 'm';
+  return Math.floor(s / 3600) + 'h';
+}
+function clock(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function px(c, x, y, w, h, color) { c.fillStyle = color; c.fillRect(x | 0, y | 0, w, h); }
+
+/* ───────────────────────── pixel icons ───────────────────────── */
+const ICON_COLORS = {
+  k: '#1f2430', w: '#ffffff', l: '#c7ccd4', d: '#7b8494', b: '#111418', g: '#4ade80',
+  r: '#ef4444', p: '#ec4899', t: '#14b8a6', y: '#facc15', n: '#8b5a2b', o: '#f59e0b', s: '#e5e7eb',
+};
+const ICONS = {
+  terminal: ['kkkkkkkkk', 'kbbbbbbbk', 'kbgbbbbbk', 'kbbgbbbbk', 'kbgbb###k', 'kbbbbbbbk', 'kkkkkkkkk'],
+  file:     ['.kkkkk...', '.kwwwkk..', '.kwlllkk.', '.kwwwwwk.', '.kwlllwk.', '.kwwwwwk.', '.kwlllwk.', '.kkkkkkk.'],
+  tool:     ['..k.k.k..', '.kdddddk.', 'kddlllddk', '.kdlkldk.', 'kddlllddk', '.kdddddk.', '..k.k.k..'],
+  approval: ['.kkkkkkk.', 'krrrwrrrk', 'krrrwrrrk', 'krrrwrrrk', 'krrrrrrrk', 'krrrwrrrk', '.kkkkkkk.'],
+  asking:   ['.kkkkkkk.', 'kppwwwppk', 'kpppppwpk', 'kppppwppk', 'kpppwpppk', 'kpppppppk', 'kpppwpppk', '.kkkkkkk.'],
+  visiting: ['kkkkkkkkk', 'kwkwwwkwk', 'kwwkwkwwk', 'kwwwkwwwk', 'kwwwwwwwk', 'kkkkkkkkk'],
+  coffee:   ['.s.s.....', '..s.s....', 'kkkkkk...', 'kwwwwkkk.', 'kwnnwk.k.', 'kwwwwkkk.', '.kkkk....'],
+};
+function drawBitmap(c, rows, x, y, blink) {
+  for (let j = 0; j < rows.length; j++) {
+    const row = rows[j];
+    for (let i = 0; i < row.length; i++) {
+      let ch = row[i];
+      if (ch === '.') continue;
+      if (ch === '#') { if (!blink) continue; ch = 'g'; }
+      c.fillStyle = ICON_COLORS[ch];
+      c.fillRect(x + i, y + j, 1, 1);
+    }
+  }
+}
+function drawBubbleIcon(c, kind, cx, top, t) {
+  // cx = centre x, top = y of the icon's top edge (world px)
+  const x = Math.round(cx - 4), y = Math.round(top);
+  if (kind === 'thinking' || kind === 'replying') {
+    // little white cloud with dots / text lines
+    px(c, x - 1, y, 11, 7, ICON_COLORS.k);
+    px(c, x, y + 1, 9, 5, ICON_COLORS.w);
+    px(c, x + 1, y - 1, 7, 1, ICON_COLORS.k);
+    px(c, x + 1, y + 7, 7, 1, ICON_COLORS.k);
+    px(c, x + 1, y, 7, 1, ICON_COLORS.w);
+    px(c, x + 1, y + 6, 7, 1, ICON_COLORS.w);
+    if (kind === 'thinking') {
+      const step = Math.floor(t * 3) % 4;
+      for (let i = 0; i < 3; i++) px(c, x + 1 + i * 3, y + 3, 2, 2, i < step ? '#6366f1' : ICON_COLORS.l);
+      px(c, x + 1, y + 9, 2, 1, ICON_COLORS.k); px(c, x, y + 10, 1, 1, ICON_COLORS.k);
+    } else {
+      const n = 1 + (Math.floor(t * 4) % 6);
+      px(c, x + 1, y + 2, Math.min(7, n + 1), 1, '#14b8a6');
+      px(c, x + 1, y + 4, Math.max(0, Math.min(5, n - 2)), 1, '#14b8a6');
+      px(c, x + 3, y + 8, 2, 1, ICON_COLORS.k); px(c, x + 3, y + 9, 1, 1, ICON_COLORS.k);
+    }
+    return;
+  }
+  const rows = ICONS[kind];
+  if (!rows) return;
+  const bob = kind === 'approval' || kind === 'asking' ? Math.round(Math.sin(t * 8) * 1) : 0;
+  drawBitmap(c, rows, x, y + bob, Math.floor(t * 2) % 2 === 0);
+}
+function drawZzz(c, cx, top, t) {
+  const Z = ['####', '..#.', '.#..', '####'];
+  for (let k = 0; k < 3; k++) {
+    const phase = (t * 0.6 + k / 3) % 1;
+    const x = Math.round(cx + 2 + phase * 6 + k);
+    const y = Math.round(top + 6 - phase * 12);
+    c.globalAlpha = Math.max(0, 1 - phase) * 0.9;
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if (Z[j][i] === '#') px(c, x + i, y + j, 1, 1, isDark() ? '#cbd5e1' : '#475569');
+  }
+  c.globalAlpha = 1;
+}
+
+/* ───────────────────────── map ───────────────────────── */
+let map = null;
+const VOID = 0, HALL = 1, WOOD = 2, CARPET = 3, WALL = 4;
+
+function buildMap(agents, workplaces) {
+  const wpById = new Map(workplaces.map(w => [w.id, w]));
+  const groups = [], gIndex = new Map();
+  const order = workplaces.map(w => w.id);
+  for (const a of agents) {
+    const key = wpById.has(a.workplace_id) ? a.workplace_id : '__floor';
+    if (!gIndex.has(key)) {
+      const g = { id: key, name: key === '__floor' ? 'Open floor' : (wpById.get(key).name || key), agents: [] };
+      gIndex.set(key, g); groups.push(g);
+    }
+    gIndex.get(key).agents.push(a);
+  }
+  groups.sort((a, b) => (a.id === '__floor' ? -1 : order.indexOf(a.id)) - (b.id === '__floor' ? -1 : order.indexOf(b.id)));
+  groups.forEach(g => g.agents.sort((a, b) => (b.is_super - a.is_super) || String(a.name).localeCompare(String(b.name))));
+  if (!groups.length) groups.push({ id: '__floor', name: 'Open floor', agents: [] });
+
+  const rooms = groups.map(g => {
+    const n = Math.max(1, g.agents.length);
+    const cols = n <= 3 ? n : n === 4 ? 2 : Math.min(4, Math.ceil(n / 2));
+    const rows = Math.ceil(n / cols);
+    return { kind: 'work', id: g.id, name: g.name, agents: g.agents, cols, rows, iw: Math.max(8, cols * 4 + 1), ih: rows * 4 + 1 };
+  });
+  const lounge = { kind: 'lounge', id: '__lounge', name: 'Lounge', agents: [], iw: 13, ih: 7 };
+
+  const top = [], bottom = [lounge];
+  let tw = 0, bw = lounge.iw + 3;
+  for (const r of rooms) {
+    if (tw <= bw) { top.push(r); tw += r.iw + 3; } else { bottom.push(r); bw += r.iw + 3; }
+  }
+  const topH = top.length ? Math.max(...top.map(r => r.ih + 2)) : 0;
+  const botH = Math.max(...bottom.map(r => r.ih + 2));
+  const W = Math.max(tw, bw) + 2;
+  const hallY = 1 + topH;
+  const H = hallY + 3 + botH + 1;
+
+  const tiles = new Uint8Array(W * H);
+  const block = new Uint8Array(W * H);
+  const at = (x, y) => y * W + x;
+  for (let y = hallY; y < hallY + 3; y++) for (let x = 1; x < W - 1; x++) tiles[at(x, y)] = HALL;
+  for (let i = 0; i < tiles.length; i++) if (tiles[i] === VOID) block[i] = 1;
+
+  const desks = new Map();          // agentId -> desk
+  const lounges = { seats: [], coffee: [], floor: [] };
+  const deco = [];                  // furniture to draw in the background
+
+  function placeRow(list, rowW, isTop) {
+    let x = 1 + Math.floor((W - 2 - rowW) / 2) + 1;
+    for (const r of list) {
+      const ow = r.iw + 2, oh = r.ih + 2;
+      const ox = x, oy = isTop ? hallY - oh : hallY + 3;
+      Object.assign(r, { ox, oy, ow, oh, ix: ox + 1, iy: oy + 1, isTop });
+      for (let yy = oy; yy < oy + oh; yy++) for (let xx = ox; xx < ox + ow; xx++) {
+        const edge = xx === ox || yy === oy || xx === ox + ow - 1 || yy === oy + oh - 1;
+        tiles[at(xx, yy)] = edge ? WALL : (r.kind === 'lounge' ? CARPET : WOOD);
+        block[at(xx, yy)] = edge ? 1 : 0;
+      }
+      const dx = ox + Math.floor(ow / 2) - 1, dy = isTop ? oy + oh - 1 : oy;
+      for (const xx of [dx, dx + 1]) { tiles[at(xx, dy)] = r.kind === 'lounge' ? CARPET : WOOD; block[at(xx, dy)] = 0; }
+      r.door = { x: dx, y: dy };
+      x += ow + 1;
+    }
+  }
+  placeRow(top, tw, true);
+  placeRow(bottom, bw, false);
+
+  const blockRect = (x, y, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) block[at(x + i, y + j)] = 1; };
+
+  for (const r of [...top, ...bottom]) {
+    if (r.kind === 'work') {
+      const used = r.cols * 4 + 1, off = Math.floor((r.iw - used) / 2);
+      r.agents.forEach((a, i) => {
+        const c = i % r.cols, row = Math.floor(i / r.cols);
+        const x0 = r.ix + off + 1 + c * 4, y0 = r.iy + 1 + row * 4;
+        blockRect(x0, y0, 3, 1);
+        desks.set(a.id, { agentId: a.id, room: r, x0, y0, seat: { x: x0 + 1, y: y0 + 1 },
+          visit: [{ x: x0, y: y0 + 1, face: 'right' }, { x: x0 + 2, y: y0 + 1, face: 'left' }], h: hash(a.id) });
+      });
+      // plants in the corners away from the door
+      const py = r.isTop ? r.iy : r.iy + r.ih - 1;
+      for (const pxx of [r.ix, r.ix + r.iw - 1]) {
+        if (!block[at(pxx, py)]) { blockRect(pxx, py, 1, 1); deco.push({ type: 'plant', x: pxx, y: py }); }
+      }
+    } else {
+      const { ix, iy } = r;
+      blockRect(ix, iy, 4, 1); deco.push({ type: 'couch', x: ix, y: iy, w: 4, face: 'down' });
+      for (let i = 0; i < 4; i++) lounges.seats.push({ x: ix + i, y: iy + 1, face: 'down', couch: true });
+      blockRect(ix, iy + 6, 4, 1); deco.push({ type: 'couch', x: ix, y: iy + 5, w: 4, face: 'up' });
+      for (let i = 0; i < 4; i++) lounges.seats.push({ x: ix + i, y: iy + 5, face: 'up', couch: true });
+      blockRect(ix + 8, iy + 6, 4, 1); deco.push({ type: 'couch', x: ix + 8, y: iy + 5, w: 4, face: 'up' });
+      for (let i = 0; i < 4; i++) lounges.seats.push({ x: ix + 8 + i, y: iy + 5, face: 'up', couch: true });
+      blockRect(ix + 9, iy, 4, 1); deco.push({ type: 'counter', x: ix + 9, y: iy, w: 4 });
+      lounges.coffee.push({ x: ix + 10, y: iy + 1, face: 'up' }, { x: ix + 11, y: iy + 1, face: 'up' });
+      blockRect(ix + 1, iy + 3, 2, 1); deco.push({ type: 'table', x: ix + 1, y: iy + 3, w: 2 });
+      blockRect(ix + 9, iy + 3, 2, 1); deco.push({ type: 'table', x: ix + 9, y: iy + 3, w: 2 });
+      deco.push({ type: 'rug', x: ix + 5, y: iy + 2, w: 3, h: 3 });
+      blockRect(ix + 12, iy + 6, 1, 1); deco.push({ type: 'plant', x: ix + 12, y: iy + 6 });
+      for (let y = iy + 2; y <= iy + 4; y++) for (let x = ix + 4; x <= ix + 8; x++) if (!block[at(x, y)]) lounges.floor.push({ x, y, face: 'down' });
+    }
+  }
+  // hallway plants
+  for (const xx of [1, W - 2]) { blockRect(xx, hallY, 1, 1); deco.push({ type: 'plant', x: xx, y: hallY }); }
+
+  map = { W, H, tiles, block, at, hallY, rooms: [...top, ...bottom], desks, lounges, deco };
+  renderBackground();
+}
+
+function walkable(x, y) {
+  return map && x >= 0 && y >= 0 && x < map.W && y < map.H && !map.block[map.at(x, y)];
+}
+function findPath(sx, sy, tx, ty) {
+  if (!walkable(tx, ty)) return null;
+  if (sx === tx && sy === ty) return [];
+  const { W, H } = map, start = sy * W + sx, goal = ty * W + tx;
+  const prev = new Int32Array(W * H).fill(-1);
+  prev[start] = start;
+  const q = [start];
+  for (let qi = 0; qi < q.length; qi++) {
+    const cur = q[qi];
+    if (cur === goal) break;
+    const cx = cur % W, cy = (cur / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = cx + dx, ny = cy + dy;
+      if (!walkable(nx, ny)) continue;
+      const ni = ny * W + nx;
+      if (prev[ni] !== -1) continue;
+      prev[ni] = cur; q.push(ni);
+    }
+  }
+  if (prev[goal] === -1) return null;
+  const path = [];
+  for (let cur = goal; cur !== start; cur = prev[cur]) path.push({ x: cur % W, y: (cur / W) | 0 });
+  return path.reverse();
+}
+
+/* ───────────────────────── background ───────────────────────── */
+function renderBackground() {
+  const { W, H, tiles, at } = map;
+  bg.width = W * T; bg.height = H * T;
+  world.width = bg.width; world.height = bg.height;
+  const c = bg.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  px(c, 0, 0, bg.width, bg.height, theme.void);
+
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const t = tiles[at(x, y)], X = x * T, Y = y * T;
+    if (t === HALL) {
+      px(c, X, Y, T, T, theme.hall[(x + y) & 1]);
+    } else if (t === WOOD) {
+      px(c, X, Y, T, T, theme.wood[y & 1]);
+      px(c, X, Y + T - 1, T, 1, theme.woodLine);
+      px(c, X + ((y * 7) % 16), Y, 1, T - 1, theme.woodLine);
+    } else if (t === CARPET) {
+      px(c, X, Y, T, T, theme.carpet[(x + y) & 1]);
+    }
+  }
+  // hallway skirting lines
+  for (let x = 1; x < W - 1; x++) {
+    px(c, x * T, map.hallY * T, T, 1, theme.hallLine);
+    px(c, x * T, (map.hallY + 3) * T - 1, T, 1, theme.hallLine);
+  }
+  // walls
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (tiles[at(x, y)] !== WALL) continue;
+    const X = x * T, Y = y * T;
+    const below = y + 1 < H ? tiles[at(x, y + 1)] : VOID;
+    px(c, X, Y, T, T, theme.wallTop);
+    if (below === WOOD || below === CARPET) {
+      px(c, X, Y + 5, T, T - 5, theme.wallFace);
+      px(c, X, Y + T - 2, T, 2, theme.wallTrim);
+    }
+  }
+  // windows on the outside walls, doors
+  for (const r of map.rooms) {
+    const wy = r.isTop ? r.oy : r.oy + r.oh - 1;
+    for (let x = r.ox + 2; x < r.ox + r.ow - 2; x += 3) {
+      if (r.isTop) {
+        px(c, x * T + 2, wy * T + 6, 12, 8, theme.windowFrame);
+        px(c, x * T + 3, wy * T + 7, 10, 6, theme.window);
+        px(c, x * T + 8, wy * T + 7, 1, 6, theme.windowFrame);
+      } else {
+        px(c, x * T + 2, wy * T + 4, 12, 6, theme.windowFrame);
+        px(c, x * T + 3, wy * T + 5, 10, 4, theme.window);
+      }
+    }
+    const d = r.door;
+    px(c, d.x * T + 1, d.y * T + 3, T * 2 - 2, T - 6, theme.door);
+  }
+  // furniture
+  for (const f of map.deco) drawDeco(c, f);
+  for (const d of map.desks.values()) drawDesk(c, d);
+}
+
+function drawPlant(c, x, y) {
+  const X = x * T, Y = y * T;
+  px(c, X + 3, Y + T - 3, 10, 2, theme.shadow);
+  px(c, X + 5, Y + 9, 6, 6, theme.pot);
+  px(c, X + 4, Y + 9, 8, 2, theme.pot);
+  px(c, X + 3, Y + 1, 10, 9, theme.plant);
+  px(c, X + 5, Y - 2, 6, 4, theme.plant);
+  px(c, X + 4, Y + 4, 2, 4, theme.plantDark);
+  px(c, X + 10, Y + 2, 2, 5, theme.plantDark);
+  px(c, X + 7, Y - 1, 2, 3, theme.plantDark);
+}
+function drawDeco(c, f) {
+  const X = f.x * T, Y = f.y * T;
+  if (f.type === 'plant') return drawPlant(c, f.x, f.y);
+  if (f.type === 'rug') {
+    px(c, X, Y, f.w * T, f.h * T, theme.rugEdge);
+    px(c, X + 2, Y + 2, f.w * T - 4, f.h * T - 4, theme.rug);
+    px(c, X + 6, Y + 6, f.w * T - 12, f.h * T - 12, theme.rugEdge);
+    px(c, X + 8, Y + 8, f.w * T - 16, f.h * T - 16, theme.rug);
+    return;
+  }
+  if (f.type === 'table') {
+    px(c, X + 1, Y + 12, f.w * T - 2, 3, theme.shadow);
+    px(c, X + 1, Y + 3, f.w * T - 2, 9, theme.table);
+    px(c, X + 1, Y + 2, f.w * T - 2, 6, theme.tableTop);
+    px(c, X + 9, Y + 3, 3, 3, '#f8fafc'); // a cup
+    px(c, X + 18, Y + 4, 6, 2, '#94a3b8'); // magazine
+    return;
+  }
+  if (f.type === 'counter') {
+    px(c, X, Y + 2, f.w * T, 13, theme.counter);
+    px(c, X, Y + 2, f.w * T, 4, theme.counterTop);
+    // coffee machine
+    const mx = X + T * 2 + 2;
+    px(c, mx, Y - 6, 12, 12, theme.machine);
+    px(c, mx + 2, Y - 4, 8, 3, '#64748b');
+    px(c, mx + 4, Y + 1, 4, 3, '#f8fafc');
+    px(c, mx + 9, Y - 4, 1, 1, '#22c55e');
+    // fruit bowl + sink
+    px(c, X + 4, Y + 1, 7, 3, '#e2e8f0');
+    px(c, X + 5, Y - 1, 2, 2, '#ef4444'); px(c, X + 8, Y - 1, 2, 2, '#f59e0b');
+    px(c, X + T * 3 + 3, Y + 3, 9, 3, '#94a3b8');
+    return;
+  }
+  if (f.type === 'couch') {
+    const w = f.w * T;
+    if (f.face === 'down') {
+      px(c, X, Y + 1, w, 9, theme.couchDark);          // back (blocked row)
+      px(c, X, Y + 2, w, 4, theme.couch);
+      px(c, X, Y + T, w, 9, theme.couch);              // cushions (seat row)
+      for (let i = 1; i < f.w; i++) px(c, X + i * T, Y + T, 1, 8, theme.couchDark);
+      px(c, X - 2, Y + 3, 3, T + 5, theme.couchDark);  // arms
+      px(c, X + w - 1, Y + 3, 3, T + 5, theme.couchDark);
+      px(c, X, Y + T + 9, w, 2, theme.shadow);
+    } else {
+      px(c, X, Y + 6, w, 10, theme.couch);             // cushions (seat row)
+      for (let i = 1; i < f.w; i++) px(c, X + i * T, Y + 6, 1, 9, theme.couchDark);
+      px(c, X, Y + T + 2, w, 10, theme.couchDark);     // back (blocked row)
+      px(c, X, Y + T + 6, w, 3, theme.couchLight);
+      px(c, X - 2, Y + 4, 3, T + 8, theme.couchDark);
+      px(c, X + w - 1, Y + 4, 3, T + 8, theme.couchDark);
+    }
+  }
+}
+function drawDesk(c, d) {
+  const X = d.x0 * T, Y = d.y0 * T, w = 3 * T;
+  px(c, X + 1, Y + 14, w - 2, 3, theme.shadow);
+  px(c, X, Y + 4, w, 11, theme.desk);
+  px(c, X, Y + 2, w, 7, theme.deskTop);
+  px(c, X, Y + 9, w, 1, theme.deskEdge);
+  px(c, X + 1, Y + 10, 2, 5, theme.deskEdge);
+  px(c, X + w - 3, Y + 10, 2, 5, theme.deskEdge);
+  // keyboard
+  px(c, X + 18, Y + 6, 12, 3, '#cbd5e1');
+  px(c, X + 18, Y + 6, 12, 1, '#e2e8f0');
+  // monitor stand (screen drawn live)
+  px(c, X + 22, Y + 2, 4, 3, '#374151');
+  // personal clutter
+  const h = d.h;
+  if (h & 1) { px(c, X + 4, Y + 3, 4, 4, '#f8fafc'); px(c, X + 8, Y + 4, 1, 2, '#f8fafc'); px(c, X + 5, Y + 4, 2, 1, '#8b5a2b'); }
+  else { px(c, X + 3, Y + 3, 7, 5, '#fde68a'); px(c, X + 4, Y + 4, 5, 1, '#d97706'); }
+  if (h & 2) { px(c, X + 38, Y - 3, 6, 6, theme.plant); px(c, X + 39, Y + 3, 4, 3, theme.pot); }
+  else { px(c, X + 37, Y + 3, 7, 5, '#93c5fd'); px(c, X + 38, Y + 2, 7, 5, '#f8fafc'); }
+}
+
+/* ───────────────────────── agents ───────────────────────── */
+const people = new Map();   // id -> person
+let agentsMeta = [], workplacesMeta = [];
+let hoverId = null;
+let lastBuildKey = '';
+
+function makePerson(a, act) {
+  const desk = map.desks.get(a.id);
+  const p = {
+    id: a.id, name: a.name, isSuper: a.is_super, meta: a, look: looks(a.id),
+    x: desk ? desk.seat.x : 2, y: desk ? desk.seat.y : map.hallY + 1,
+    path: [], goal: null, dir: 'up', step: 0, walking: false,
+    state: 'idle', stateSince: Date.now(), detail: '', detailAt: 0, toolName: '',
+    visit: null, lounge: null, coffeeUntil: 0, seatedAt: Date.now(), ts: Date.now(),
+  };
+  applyActivity(p, act || { state: 'idle' }, true);
+  // Idle agents start the day already in the lounge.
+  if (p.state === 'idle') {
+    const spot = claimLoungeSpot(p, false);
+    if (spot) { p.x = spot.x; p.y = spot.y; p.goal = spot; p.lounge = spot; p.seatedAt = Date.now() - 10000; }
+  }
+  return p;
+}
+
+function syncPeople(agents, workplaces, activity) {
+  agentsMeta = agents; workplacesMeta = workplaces;
+  const key = JSON.stringify([agents.map(a => [a.id, a.workplace_id, a.name]), workplaces.map(w => [w.id, w.name])]);
+  if (key !== lastBuildKey || !map) {
+    lastBuildKey = key;
+    buildMap(agents, workplaces);
+    const old = new Map(people);
+    people.clear();
+    for (const a of agents) {
+      const prev = old.get(a.id);
+      if (prev && walkable(Math.round(prev.x), Math.round(prev.y))) {
+        prev.meta = a; prev.name = a.name; prev.isSuper = a.is_super;
+        prev.path = []; prev.goal = null; prev.lounge = null;
+        prev.x = Math.round(prev.x); prev.y = Math.round(prev.y);
+        people.set(a.id, prev);
+      } else {
+        people.set(a.id, makePerson(a, activity && activity[a.id]));
+      }
+    }
+    resize();
+  }
+  if (activity) for (const [id, act] of Object.entries(activity)) {
+    const p = people.get(id);
+    if (p && act && act.seq && act.seq > (p.seq || 0)) applyActivity(p, act, true);
+  }
+  emptyEl.classList.toggle('show', agents.length === 0);
+  renderRoster(true);
+}
+
+function applyActivity(p, act, quiet) {
+  const prevState = p.state;
+  const state = STATE_META[act.state] ? act.state : 'thinking';
+  p.seq = act.seq || p.seq;
+  p.ts = act.ts || Date.now();
+  if (state !== prevState) { p.state = state; p.stateSince = Date.now(); }
+  if (act.tool_name) p.toolName = act.tool_name;
+  const text = act.detail || '';
+  if (text) { p.detail = text; if (!quiet) p.detailAt = Date.now(); }
+  else if (state !== prevState && state !== 'idle' && state !== 'thinking') p.detail = '';
+  if (state === 'visiting' && act.target_agent_id && act.target_agent_id !== p.id && map.desks.has(act.target_agent_id)) {
+    p.visit = { target: act.target_agent_id, until: 0 };
+  }
+  if (state !== 'idle') { releaseLounge(p); p.coffeeUntil = 0; }
+}
+
+function claimLoungeSpot(p, coffeeFirst) {
+  const taken = new Set([...people.values()].filter(o => o !== p && o.lounge).map(o => o.lounge.x + ',' + o.lounge.y));
+  const free = list => list.find(s => !taken.has(s.x + ',' + s.y));
+  let spot = coffeeFirst ? free(map.lounges.coffee) : null;
+  if (spot) { p.coffeeUntil = -1; }
+  else {
+    const seats = map.lounges.seats.slice().sort((a, b) => ((hash(p.id + a.x + a.y) & 7) - (hash(p.id + b.x + b.y) & 7)));
+    spot = free(seats) || free(map.lounges.floor);
+  }
+  p.lounge = spot || null;
+  return spot;
+}
+function releaseLounge(p) { p.lounge = null; }
+
+function deskSpotFor(p) {
+  const d = map.desks.get(p.id);
+  return d ? { x: d.seat.x, y: d.seat.y, face: 'up', seat: true } : null;
+}
+function visitSpot(p) {
+  const d = map.desks.get(p.visit.target);
+  if (!d) return null;
+  const taken = new Set([...people.values()].filter(o => o !== p && o.goal).map(o => o.goal.x + ',' + o.goal.y));
+  return d.visit.find(s => !taken.has(s.x + ',' + s.y)) || d.visit[0];
+}
+
+function chooseGoal(p, now) {
+  if (p.visit) {
+    const s = visitSpot(p);
+    if (s) {
+      if (p.visit.until && now > p.visit.until) p.visit = null;
+      else return s;
+    } else p.visit = null;
+  }
+  if (p.state === 'idle') {
+    if (p.lounge) {
+      if (p.coffeeUntil > 0 && now > p.coffeeUntil) {
+        // finished the coffee — find a seat for a nap
+        p.coffeeUntil = 0;
+        const seats = map.lounges.seats;
+        const taken = new Set([...people.values()].filter(o => o !== p && o.lounge).map(o => o.lounge.x + ',' + o.lounge.y));
+        const seat = seats.find(s => !taken.has(s.x + ',' + s.y)) || map.lounges.floor.find(s => !taken.has(s.x + ',' + s.y));
+        if (seat) p.lounge = seat;
+      }
+      return p.lounge;
+    }
+    if (now - p.stateSince > IDLE_GRACE_MS) {
+      const s = claimLoungeSpot(p, true);
+      if (s) return s;
+    }
+    return p.goal || deskSpotFor(p);
+  }
+  return deskSpotFor(p) || p.goal;
+}
+
+function tileOf(p) { return p.path.length ? p.path[0] : { x: Math.round(p.x), y: Math.round(p.y) }; }
+
+function updatePerson(p, dt, now) {
+  const goal = chooseGoal(p, now);
+  if (goal && (!p.goal || p.goal.x !== goal.x || p.goal.y !== goal.y)) {
+    p.goal = goal;
+    const from = tileOf(p);
+    const rest = findPath(from.x, from.y, goal.x, goal.y);
+    if (rest === null) { p.x = goal.x; p.y = goal.y; p.path = []; }
+    else p.path = p.path.length ? [p.path[0]].concat(rest) : rest;
+  }
+  if (p.path.length) {
+    const next = p.path[0];
+    const dx = next.x - p.x, dy = next.y - p.y, dist = Math.hypot(dx, dy);
+    const stepLen = SPEED * dt;
+    if (Math.abs(dx) > Math.abs(dy)) p.dir = dx > 0 ? 'right' : 'left'; else if (dist > 0.001) p.dir = dy > 0 ? 'down' : 'up';
+    if (dist <= stepLen) { p.x = next.x; p.y = next.y; p.path.shift(); }
+    else { p.x += dx / dist * stepLen; p.y += dy / dist * stepLen; }
+    p.walking = true; p.step += dt * 9;
+    if (!p.path.length) arrived(p, now);
+  } else {
+    if (p.walking) arrived(p, now);
+    p.walking = false;
+  }
+}
+function arrived(p, now) {
+  p.walking = false;
+  p.seatedAt = now;
+  if (p.goal && p.goal.face) p.dir = p.goal.face;
+  if (p.visit && !p.visit.until) {
+    const s = visitSpot(p);
+    if (s && s.x === p.goal.x && s.y === p.goal.y) { p.visit.until = now + VISIT_DWELL_MS; p.dir = s.face; }
+  }
+  if (p.coffeeUntil === -1 && p.lounge && map.lounges.coffee.includes(p.lounge)) p.coffeeUntil = now + COFFEE_MS;
+}
+
+/* pose: what the sprite should look like right now */
+function poseOf(p) {
+  if (p.walking) return 'walk';
+  const g = p.goal;
+  if (g && g.seat && Math.round(p.x) === g.x && Math.round(p.y) === g.y) return 'desk';
+  if (g && g.couch && p.lounge === g && Math.round(p.x) === g.x && Math.round(p.y) === g.y) return 'couch';
+  return 'stand';
+}
+
+/* ───────────────────────── sprites ───────────────────────── */
+function drawPerson(c, p, t, now) {
+  const L = p.look;
+  const pose = poseOf(p);
+  const X = Math.round(p.x * T + 8);
+  let Y = Math.round(p.y * T + 13);
+  const sleeping = pose === 'couch' && p.state === 'idle' && now - p.seatedAt > 1500;
+  const typing = pose === 'desk' && WORKING.has(p.state);
+  let dir = p.dir;
+  if (pose === 'desk') dir = 'up';
+  if (pose === 'couch') { dir = p.goal.face; Y -= 2; }
+  if (pose === 'desk') Y -= 3;
+
+  // shadow + status ring
+  if (p.state === 'approval' || p.state === 'asking') {
+    const a = 0.35 + 0.35 * Math.sin(t * 6);
+    c.globalAlpha = a;
+    px(c, X - 7, Y - 1, 14, 3, STATE_META[p.state].color);
+    c.globalAlpha = 1;
+  }
+  if (pose !== 'couch') px(c, X - 4, Y, 8, 2, theme.shadow);
+
+  const walkPhase = pose === 'walk' ? Math.floor(p.step) % 4 : 0;
+  const bob = pose === 'walk' && (walkPhase === 1 || walkPhase === 3) ? -1 : 0;
+  const breathe = sleeping ? Math.round(Math.sin(t * 2) * 0.5) : 0;
+  const y0 = Y + bob;
+
+  // legs
+  if (pose === 'walk' || pose === 'stand') {
+    const l1 = walkPhase === 1 ? -1 : 0, l2 = walkPhase === 3 ? -1 : 0;
+    if (dir === 'left' || dir === 'right') {
+      px(c, X - 2, y0 - 4 + l1, 2, 4 - (l1 ? 1 : 0), L.pants);
+      px(c, X, y0 - 4 + l2, 2, 4 - (l2 ? 1 : 0), L.pants);
+      px(c, X - 2 + (walkPhase === 1 ? -1 : 0), y0 - 1, 3, 1, '#1f2937');
+      px(c, X + (walkPhase === 3 ? 1 : 0), y0 - 1, 3, 1, '#1f2937');
+    } else {
+      px(c, X - 3, y0 - 4 + l1, 2, 4, L.pants);
+      px(c, X + 1, y0 - 4 + l2, 2, 4, L.pants);
+      px(c, X - 3, y0 - 1 + l1, 2, 1, '#1f2937');
+      px(c, X + 1, y0 - 1 + l2, 2, 1, '#1f2937');
+    }
+  } else if (pose === 'couch' && dir === 'down') {
+    px(c, X - 3, y0 - 3, 6, 2, L.pants);
+    px(c, X - 3, y0 - 1, 2, 2, L.pants); px(c, X + 1, y0 - 1, 2, 2, L.pants);
+  }
+
+  // torso
+  const ty = y0 - 9 + breathe;
+  px(c, X - 4, ty, 8, 5, L.shirt);
+  px(c, X - 4, ty + 4, 8, 1, L.shirtDark);
+  if (p.isSuper) { px(c, X - 1, ty + 1, 2, 2, '#facc15'); }
+  // arms
+  if (dir === 'left' || dir === 'right') {
+    const s = dir === 'left' ? -1 : 1, swing = pose === 'walk' ? (walkPhase === 1 ? -1 : walkPhase === 3 ? 1 : 0) : 0;
+    px(c, X - 1 + swing * s, ty + 1, 2, 4, L.shirtDark);
+    px(c, X - 1 + swing * s, ty + 5, 2, 1, L.skin);
+  } else if (typing) {
+    const a1 = Math.floor(t * 10) % 2, a2 = 1 - a1;
+    px(c, X - 6, ty + 1 - a1, 2, 3, L.shirtDark); px(c, X - 6, ty - 1 - a1 + 1, 2, 1, L.skin);
+    px(c, X + 4, ty + 1 - a2, 2, 3, L.shirtDark); px(c, X + 4, ty - 1 - a2 + 1, 2, 1, L.skin);
+  } else {
+    const holding = pose === 'stand' && p.coffeeUntil > 0;
+    px(c, X - 5, ty + 1, 1, 4, L.shirtDark); px(c, X - 5, ty + 5, 1, 1, L.skin);
+    px(c, X + 4, ty + 1, 1, 4, L.shirtDark); px(c, X + 4, ty + 5, 1, 1, L.skin);
+    if (holding) { px(c, X + 4, ty + 2, 3, 3, '#f8fafc'); px(c, X + 5, ty + 3, 1, 1, '#8b5a2b'); }
+  }
+
+  // head
+  const hy = ty - 6;
+  const sideways = dir === 'left' || dir === 'right';
+  px(c, X - 4, hy, 8, 6, L.skin);
+  if (dir === 'up') {
+    px(c, X - 4, hy - 1, 8, 6, L.hair);
+    px(c, X - 3, hy + 5, 6, 1, L.hair);
+  } else {
+    px(c, X - 4, hy - 1, 8, 2, L.hair);
+    if (L.hairStyle === 1) { px(c, X - 4, hy, 1, 4, L.hair); px(c, X + 3, hy, 1, 4, L.hair); }
+    if (L.hairStyle === 2) { px(c, X - 5, hy, 2, 6, L.hair); px(c, X + 3, hy, 2, 6, L.hair); }
+    if (sideways) {
+      const s = dir === 'left' ? -1 : 1;
+      px(c, X - 4 * s - (s > 0 ? 1 : 0), hy, 2, 4, L.hair);
+      if (!sleeping) px(c, X + 2 * s - (s > 0 ? 1 : 0), hy + 2, 1, 2, '#1f2937');
+    } else if (sleeping) {
+      px(c, X - 3, hy + 3, 2, 1, '#1f2937'); px(c, X + 1, hy + 3, 2, 1, '#1f2937');
+    } else {
+      const blink = (Math.floor(t * 1.3 + (hash(p.id) % 7)) % 9) === 0;
+      px(c, X - 2, hy + 2, 1, blink ? 1 : 2, '#1f2937'); px(c, X + 1, hy + 2, 1, blink ? 1 : 2, '#1f2937');
+      if (p.state === 'replying') px(c, X - 1, hy + 4, 2, 1, '#9f1239');
+    }
+  }
+  if (p.isSuper) { px(c, X - 3, hy - 3, 6, 1, '#facc15'); px(c, X - 3, hy - 4, 1, 1, '#facc15'); px(c, X, hy - 4, 1, 1, '#facc15'); px(c, X + 2, hy - 4, 1, 1, '#facc15'); }
+
+  // status icon above the head (beside the monitor when seated at the desk)
+  const iconTop = pose === 'desk' ? hy - 9 : hy - 12;
+  const iconX = pose === 'desk' ? X + 13 : X;
+  if (sleeping) drawZzz(c, X, iconTop, t);
+  else if (pose === 'stand' && p.coffeeUntil > 0) drawBubbleIcon(c, 'coffee', iconX, iconTop, t);
+  else if (p.visit && p.visit.until) drawBubbleIcon(c, 'visiting', iconX, iconTop, t);
+  else if (p.state !== 'idle') drawBubbleIcon(c, p.state, iconX, iconTop, t);
+
+  p.hit = { x: X - 7, y: hy - 4, w: 14, h: Y - hy + 6, cx: X, top: Math.min(iconTop, hy - 10) };
+}
+
+function drawMonitor(c, d, t) {
+  const p = people.get(d.agentId);
+  const X = d.x0 * T + 17, Y = d.y0 * T - 7;
+  px(c, X, Y, 14, 10, '#1f2937');
+  const sx = X + 1, sy = Y + 1, w = 12, h = 8;
+  const st = p ? p.state : 'idle';
+  const here = p && poseOf(p) === 'desk';
+  if (!here || st === 'idle') { px(c, sx, sy, w, h, '#0f172a'); if (st !== 'idle') px(c, sx + 5, sy + 3, 2, 2, '#334155'); return; }
+  if (st === 'terminal') {
+    px(c, sx, sy, w, h, '#020617');
+    const off = Math.floor(t * 6) % 4;
+    for (let i = 0; i < 4; i++) px(c, sx + 1, sy + 1 + i * 2, 2 + ((hash(i + off + d.agentId) % 8)), 1, '#4ade80');
+  } else if (st === 'file') {
+    px(c, sx, sy, w, h, '#f8fafc');
+    for (let i = 0; i < 3; i++) px(c, sx + 2, sy + 1 + i * 2, 4 + ((i * 3 + Math.floor(t * 3)) % 6), 1, '#94a3b8');
+  } else if (st === 'approval' || st === 'asking') {
+    px(c, sx, sy, w, h, Math.floor(t * 4) % 2 ? STATE_META[st].color : '#7f1d1d');
+    px(c, sx + 5, sy + 1, 2, 4, '#fff'); px(c, sx + 5, sy + 6, 2, 1, '#fff');
+  } else if (st === 'tool') {
+    px(c, sx, sy, w, h, '#3b0764');
+    const k = Math.floor(t * 5) % 3;
+    for (let i = 0; i < 3; i++) px(c, sx + 2 + i * 3, sy + 3, 2, 2, i === k ? '#e9d5ff' : '#7e22ce');
+  } else if (st === 'replying') {
+    px(c, sx, sy, w, h, '#ecfeff');
+    const n = Math.floor(t * 5) % 9;
+    px(c, sx + 1, sy + 2, Math.min(10, n + 2), 1, '#0f766e');
+    px(c, sx + 1, sy + 4, Math.max(0, n - 3), 1, '#0f766e');
+  } else {
+    px(c, sx, sy, w, h, '#1e1b4b');
+    if (Math.floor(t * 2) % 2) px(c, sx + 2, sy + 5, 3, 1, '#a5b4fc');
+    px(c, sx + 2, sy + 2, 6, 1, '#6366f1');
+  }
+  // screen glow on the desk
+  c.globalAlpha = 0.18; px(c, X - 2, Y + 10, 18, 3, STATE_META[st].color); c.globalAlpha = 1;
+}
+function drawChair(c, d, part) {
+  const X = d.seat.x * T, Y = d.seat.y * T;
+  if (part === 'seat') { px(c, X + 3, Y + 6, 10, 6, theme.chairSeat); px(c, X + 7, Y + 12, 2, 3, theme.chair); px(c, X + 4, Y + 14, 8, 1, theme.chair); }
+  else { px(c, X + 3, Y + 9, 10, 5, theme.chair); px(c, X + 4, Y + 10, 8, 2, theme.chairSeat); }
+}
+
+/* ───────────────────────── render loop ───────────────────────── */
+let scale = 1, dpr = 1, lastFrame = performance.now();
+
+function resize() {
+  if (!map) return;
+  const ww = map.W * T, wh = map.H * T;
+  const avail = stage.clientWidth || 800;
+  const maxH = Math.max(320, window.innerHeight - 170);
+  scale = Math.min(avail / ww, maxH / wh);
+  scale = scale >= 1 ? Math.max(1, Math.floor(scale * 4) / 4) : scale;
+  dpr = window.devicePixelRatio || 1;
+  const cssW = Math.round(ww * scale), cssH = Math.round(wh * scale);
+  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+  canvas.style.margin = '0 auto';
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+}
+
+function frame(nowPerf) {
+  const dt = Math.min(0.1, (nowPerf - lastFrame) / 1000);
+  lastFrame = nowPerf;
+  const now = Date.now(), t = nowPerf / 1000;
+  if (map) {
+    for (const p of people.values()) updatePerson(p, dt, now);
+    simulateTick(now);
+    wctx.imageSmoothingEnabled = false;
+    wctx.drawImage(bg, 0, 0);
+    for (const d of map.desks.values()) drawMonitor(wctx, d, t);
+    // painter's order: chairs and people by depth
+    const items = [];
+    for (const d of map.desks.values()) {
+      const p = people.get(d.agentId);
+      const occupied = [...people.values()].some(o => poseOf(o) === 'desk' && o.goal && o.goal.x === d.seat.x && o.goal.y === d.seat.y);
+      items.push({ y: d.seat.y * T + 6, draw: () => drawChair(wctx, d, 'seat') });
+      items.push({ y: d.seat.y * T + (occupied ? 15 : 9), draw: () => drawChair(wctx, d, 'back') });
+      void p;
+    }
+    for (const p of people.values()) items.push({ y: p.y * T + 12, draw: () => drawPerson(wctx, p, t, now) });
+    items.sort((a, b) => a.y - b.y);
+    for (const it of items) it.draw();
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(world, 0, 0, canvas.width, canvas.height);
+    drawOverlay(now);
+  }
+  requestAnimationFrame(frame);
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function wrap(c, text, maxW, maxLines) {
+  const words = String(text).split(' '); const lines = []; let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (c.measureText(test).width > maxW && line) { lines.push(line); line = w; if (lines.length === maxLines) break; }
+    else line = test;
+  }
+  if (lines.length < maxLines && line) lines.push(line);
+  if (lines.length === maxLines && (words.join(' ').length > lines.join(' ').length)) {
+    let last = lines[maxLines - 1];
+    while (last.length && c.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+    lines[maxLines - 1] = last + '…';
+  }
+  return lines;
+}
+
+function drawOverlay(now) {
+  const k = scale * dpr;
+  ctx.save();
+  // room signs
+  ctx.font = `700 ${Math.max(9, 10 * dpr * Math.min(1.4, scale))}px system-ui, -apple-system, Segoe UI, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const r of map.rooms) {
+    // signs sit in the margin just outside the room's outer wall
+    const cx = (r.ox + r.ow / 2) * T * k;
+    const cy = (r.isTop ? (r.oy - 0.45) : (r.oy + r.oh + 0.45)) * T * k;
+    ctx.fillStyle = theme.wallText;
+    ctx.fillText(String(r.name).toUpperCase(), cx, cy);
+  }
+  // name tags
+  const fs = Math.max(10, Math.round(11 * dpr * Math.min(1.25, Math.max(0.85, scale / 2))));
+  ctx.font = `600 ${fs}px system-ui, -apple-system, Segoe UI, sans-serif`;
+  const list = [...people.values()].sort((a, b) => a.y - b.y);
+  // Busy and hovered agents claim label space first; others skip a label
+  // that would overlap one already drawn (hover shows it anyway).
+  const prio = p => (p.id === hoverId ? 0 : p.state !== 'idle' ? 1 : 2);
+  const placed = [];
+  for (const p of list.slice().sort((a, b) => prio(a) - prio(b))) {
+    if (!p.hit) continue;
+    const cx = p.hit.cx * k, by = (p.hit.y + p.hit.h + 3) * k;
+    const label = p.name;
+    const w = ctx.measureText(label).width + fs * 1.6, h = fs * 1.55;
+    const box = { x: cx - w / 2, y: by, w, h };
+    if (p.id !== hoverId && placed.some(b => box.x < b.x + b.w + 2 && b.x < box.x + box.w + 2 && box.y < b.y + b.h && b.y < box.y + box.h)) continue;
+    placed.push(box);
+    ctx.globalAlpha = 0.95;
+    roundRect(ctx, cx - w / 2, by, w, h, h / 2);
+    ctx.fillStyle = theme.label; ctx.fill();
+    ctx.strokeStyle = p.id === hoverId ? STATE_META[p.state].color : theme.labelBorder;
+    ctx.lineWidth = p.id === hoverId ? 2 * dpr : 1 * dpr; ctx.stroke();
+    ctx.fillStyle = STATE_META[p.state].color;
+    ctx.beginPath(); ctx.arc(cx - w / 2 + fs * 0.65, by + h / 2, fs * 0.28, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = theme.labelText; ctx.textAlign = 'left';
+    ctx.fillText(label, cx - w / 2 + fs * 1.15, by + h / 2 + 0.5);
+    ctx.globalAlpha = 1;
+  }
+  // speech bubbles (fresh actions + hovered agent)
+  ctx.font = `500 ${fs}px system-ui, -apple-system, Segoe UI, sans-serif`;
+  for (const p of list) {
+    if (!p.hit || !p.detail) continue;
+    const fresh = now - p.detailAt < BUBBLE_MS;
+    if (!(fresh || p.id === hoverId)) continue;
+    const lines = wrap(ctx, p.detail, 190 * dpr, 2);
+    const lh = fs * 1.3, padX = fs * 0.7, padY = fs * 0.5;
+    const w = Math.max(...lines.map(l => ctx.measureText(l).width)) + padX * 2;
+    const h = lines.length * lh + padY * 2;
+    const cx = p.hit.cx * k, bottom = (p.hit.top - 2) * k;
+    let x = Math.round(cx - w / 2); x = Math.max(4 * dpr, Math.min(canvas.width - w - 4 * dpr, x));
+    const y = Math.round(bottom - h - 6 * dpr);
+    const fade = p.id === hoverId ? 1 : Math.min(1, (BUBBLE_MS - (now - p.detailAt)) / 800);
+    ctx.globalAlpha = Math.max(0, fade);
+    ctx.fillStyle = isDark() ? '#f9fafb' : '#ffffff';
+    ctx.strokeStyle = STATE_META[p.state].color; ctx.lineWidth = 1.5 * dpr;
+    roundRect(ctx, x, y, w, h, 7 * dpr); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 5 * dpr, y + h - 0.5); ctx.lineTo(cx, y + h + 6 * dpr); ctx.lineTo(cx + 5 * dpr, y + h - 0.5); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillRect(cx - 4 * dpr, y + h - 2 * dpr, 8 * dpr, 2.5 * dpr);
+    ctx.fillStyle = '#111827'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const mono = p.state === 'terminal';
+    if (mono) ctx.font = `500 ${Math.round(fs * 0.92)}px ui-monospace, SFMono-Regular, Consolas, monospace`;
+    lines.forEach((l, i) => ctx.fillText(l, x + padX, y + padY + i * lh + lh * 0.12));
+    if (mono) ctx.font = `500 ${fs}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+/* ───────────────────────── interaction ───────────────────────── */
+function personAt(evt) {
+  const r = canvas.getBoundingClientRect();
+  const wx = (evt.clientX - r.left) / scale, wy = (evt.clientY - r.top) / scale;
+  let best = null;
+  for (const p of people.values()) {
+    const h = p.hit; if (!h) continue;
+    if (wx >= h.x - 2 && wx <= h.x + h.w + 2 && wy >= h.y - 4 && wy <= h.y + h.h + 10) {
+      if (!best || p.y > best.y) best = p;
+    }
+  }
+  return best;
+}
+function showTip(p, evt) {
+  if (!p) { tip.classList.remove('show'); return; }
+  const meta = STATE_META[p.state];
+  const detail = p.detail ? `<div style="margin-top:.3rem"><code>${esc(p.detail)}</code></div>` : '';
+  tip.innerHTML = `<b>${esc(p.name)}</b> <span class="muted">· ${esc(meta.label)}${p.toolName && p.state !== 'idle' && p.state !== 'thinking' ? ' · ' + esc(p.toolName) : ''} · ${ago(p.ts)}</span>${detail}<div class="muted" style="margin-top:.35rem">Click to open chat</div>`;
+  const sr = stage.getBoundingClientRect();
+  let x = evt.clientX - sr.left + 14, y = evt.clientY - sr.top + 14;
+  tip.classList.add('show');
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  if (x + tw > sr.width - 8) x = evt.clientX - sr.left - tw - 14;
+  if (y + th > sr.height - 8) y = evt.clientY - sr.top - th - 14;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+}
+canvas.addEventListener('mousemove', e => {
+  const p = personAt(e);
+  const id = p ? p.id : null;
+  if (id !== hoverId) { hoverId = id; renderRoster(); }
+  canvas.style.cursor = p ? 'pointer' : 'default';
+  showTip(p, e);
+});
+canvas.addEventListener('mouseleave', () => { hoverId = null; tip.classList.remove('show'); renderRoster(); });
+canvas.addEventListener('click', e => { const p = personAt(e); if (p && !p.fake) window.location.href = '/agents/' + encodeURIComponent(p.id); });
+
+/* ───────────────────────── side panel ───────────────────────── */
+function swatch(p) {
+  const c = document.createElement('canvas'); c.width = 16; c.height = 16; c.className = 'office-swatch';
+  const x = c.getContext('2d');
+  px(x, 0, 0, 16, 16, isDark() ? '#1f2937' : '#f3f4f6');
+  px(x, 4, 10, 8, 6, p.look.shirt);
+  px(x, 4, 4, 8, 6, p.look.skin);
+  px(x, 4, 3, 8, 2, p.look.hair);
+  px(x, 6, 6, 1, 2, '#1f2937'); px(x, 9, 6, 1, 2, '#1f2937');
+  if (p.isSuper) { px(x, 5, 1, 6, 1, '#facc15'); px(x, 5, 0, 1, 1, '#facc15'); px(x, 8, 0, 1, 1, '#facc15'); px(x, 10, 0, 1, 1, '#facc15'); }
+  return c;
+}
+// Rows are keyed by agent and updated in place, so a click never lands on
+// an element that was just replaced.
+const rosterRows = new Map();
+let rosterTimer = 0, rosterDirty = false;
+function renderRoster(force) {
+  if (!force && rosterTimer) { rosterDirty = true; return; }
+  rosterTimer = setTimeout(() => { rosterTimer = 0; if (rosterDirty) { rosterDirty = false; renderRoster(true); } }, 250);
+  const list = [...people.values()].sort((a, b) => (b.isSuper - a.isSuper) || String(a.name).localeCompare(String(b.name)));
+  const keep = new Set(list.map(p => p.id));
+  for (const [id, row] of rosterRows) if (!keep.has(id)) { row.li.remove(); rosterRows.delete(id); }
+  list.forEach((p, i) => {
+    let row = rosterRows.get(p.id);
+    if (!row || row.person !== p || row.dark !== isDark()) {
+      if (row) row.li.remove();
+      const li = document.createElement('li');
+      const nm = document.createElement('div'); nm.className = 'office-name';
+      const n = document.createElement('span'); n.className = 'n';
+      const chip = document.createElement('span'); chip.className = 'office-chip';
+      nm.append(n, chip);
+      const dt = document.createElement('div'); dt.className = 'office-detail';
+      li.append(swatch(p), nm, dt);
+      li.addEventListener('mouseenter', () => { hoverId = p.id; li.classList.add('is-hot'); });
+      li.addEventListener('mouseleave', () => { hoverId = null; li.classList.remove('is-hot'); });
+      li.addEventListener('click', () => { if (!p.fake) window.location.href = '/agents/' + encodeURIComponent(p.id); });
+      row = { li, n, chip, dt, person: p, dark: isDark() };
+      rosterRows.set(p.id, row);
+    }
+    const meta = STATE_META[p.state];
+    row.n.textContent = p.name;
+    row.chip.textContent = meta.label;
+    row.chip.style.background = meta.color;
+    row.dt.textContent = p.detail ? p.detail : (p.state === 'idle' ? 'Nothing running · ' + ago(p.ts) : meta.label + ' · ' + ago(p.ts));
+    row.li.title = p.fake ? p.name : 'Open ' + p.name + '’s chat';
+    row.li.classList.toggle('is-hot', p.id === hoverId);
+    if (rosterEl.children[i] !== row.li) rosterEl.insertBefore(row.li, rosterEl.children[i] || null);
+  });
+}
+function pushFeed(p, act) {
+  const meta = STATE_META[act.state] || STATE_META.thinking;
+  if (act.state === 'thinking' && !act.detail) return;   // too chatty
+  const li = document.createElement('li');
+  const text = act.detail ? act.detail : meta.label;
+  li.innerHTML = `<time>${clock(act.ts || Date.now())}</time><div class="txt" title="${esc(text)}"><span class="who" style="color:${meta.color}">${esc(p.name)}</span> ${esc(text)}</div>`;
+  feedEl.prepend(li);
+  while (feedEl.children.length > 60) feedEl.lastChild.remove();
+}
+function renderLegend() {
+  legendEl.innerHTML = '';
+  const entries = [
+    ['thinking', 'Thinking'], ['terminal', 'Running a command'], ['file', 'Reading / editing a file'],
+    ['tool', 'Other tool'], ['visiting', 'Messaging an agent'], ['replying', 'Writing the reply'],
+    ['approval', 'Needs your approval'], ['asking', 'Asking you something'], ['zzz', 'Idle (napping)'], ['coffee', 'Coffee break'],
+  ];
+  for (const [kind, label] of entries) {
+    const li = document.createElement('li');
+    const c = document.createElement('canvas'); c.width = 22; c.height = 18;
+    const x = c.getContext('2d');
+    if (kind === 'zzz') drawZzz(x, 6, 4, 0.4); else drawBubbleIcon(x, kind, 11, 5, 0.6);
+    const s = document.createElement('span'); s.textContent = label;
+    li.append(c, s); legendEl.appendChild(li);
+  }
+}
+
+/* ───────────────────────── live data ───────────────────────── */
+let es = null, cursor = 0, refetchTimer = 0, connected = false;
+
+function setLive(mode, text) {
+  liveEl.classList.toggle('is-off', mode === 'off');
+  liveEl.classList.toggle('is-sim', mode === 'sim');
+  liveEl.textContent = text;
+}
+function liveLabel() {
+  if (sim.on) setLive('sim', 'Simulated');
+  else if (connected) setLive('on', 'Live');
+  else setLive('off', 'Reconnecting…');
+}
+
+async function loadState() {
+  const res = await fetch('/api/office/state', { credentials: 'same-origin' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!sim.on || !sim.fake) syncPeople(data.agents, data.workplaces, data.activity);
+  cursor = Math.max(cursor, data.seq || 0);
+  return data;
+}
+function scheduleRefetch() {
+  if (refetchTimer) return;
+  refetchTimer = setTimeout(() => { refetchTimer = 0; loadState().catch(() => {}); }, 800);
+}
+function onActivity(act) {
+  if (act.seq) cursor = Math.max(cursor, act.seq);
+  if (sim.on && sim.fake) return;
+  const p = people.get(act.agent_id);
+  if (!p) { scheduleRefetch(); return; }
+  applyActivity(p, act, false);
+  pushFeed(p, act);
+  renderRoster();
+}
+function connect() {
+  if (es) es.close();
+  es = new EventSource('/api/office/stream?after=' + cursor);
+  es.addEventListener('open', () => { connected = true; liveLabel(); });
+  es.addEventListener('activity', e => { try { onActivity(JSON.parse(e.data)); } catch (err) { /* ignore */ } });
+  es.addEventListener('error', () => {
+    connected = false; liveLabel();
+    if (es.readyState === EventSource.CLOSED) setTimeout(() => loadState().then(connect).catch(connect), 3000);
+  });
+}
+
+/* ───────────────────────── simulation (preview only) ───────────────────────── */
+const sim = { on: false, fake: false, next: 0, scripts: new Map() };
+const SIM_CMDS = ['npm test', 'git status', 'ls -la src', 'python -m pytest -q', 'docker ps', 'grep -rn TODO .', 'npm run build'];
+const SIM_FILES = ['src/app.py', 'README.md', 'routes/api.py', 'static/main.js', 'docs/plan.md', 'tests/test_core.py'];
+const SIM_THOUGHTS = ['Let me check the failing test first.', 'The config looks off — reading it.', 'Planning the next step…', 'That worked. Summarising for the user.'];
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+function simScript(p) {
+  const others = [...people.keys()].filter(id => id !== p.id);
+  const steps = [
+    { state: 'thinking', detail: pick(SIM_THOUGHTS) },
+    { state: 'terminal', tool_name: 'bash', detail: pick(SIM_CMDS) },
+    { state: 'thinking' },
+    { state: 'file', tool_name: pick(['read_file', 'str_replace', 'write_file']), detail: pick(SIM_FILES) },
+  ];
+  if (others.length && Math.random() < 0.55) steps.push({ state: 'visiting', tool_name: 'send_agent_message', target_agent_id: pick(others), detail: 'Can you review my change?' });
+  if (Math.random() < 0.25) steps.push({ state: 'approval', tool_name: 'bash', detail: 'Needs approval: bash rm -rf build/' });
+  steps.push({ state: 'tool', tool_name: 'get_current_date', detail: '' });
+  steps.push({ state: 'replying', detail: 'Done — tests pass and the fix is in.' });
+  steps.push({ state: 'idle' });
+  return steps;
+}
+function simulateTick(now) {
+  if (!sim.on || now < sim.next) return;
+  sim.next = now + 900 + Math.random() * 900;
+  const all = [...people.values()];
+  if (!all.length) return;
+  const p = pick(all);
+  let script = sim.scripts.get(p.id);
+  if (!script || !script.length) {
+    if (p.state !== 'idle' || Math.random() < 0.4) { script = simScript(p); sim.scripts.set(p.id, script); } else return;
+  }
+  const step = script.shift();
+  const act = Object.assign({ agent_id: p.id, ts: Date.now(), tool_name: '', detail: '', target_agent_id: '' }, step);
+  applyActivity(p, act, false);
+  pushFeed(p, act);
+  renderRoster();
+}
+simBtn.addEventListener('click', () => {
+  sim.on = !sim.on;
+  simBtn.setAttribute('aria-pressed', String(sim.on));
+  simBtn.textContent = sim.on ? 'Stop simulation' : 'Simulate activity';
+  if (sim.on && !agentsMeta.length) {
+    sim.fake = true;
+    const wps = [{ id: 'wp-a', name: 'Research' }, { id: 'wp-b', name: 'Engineering' }];
+    const fakes = ['Ada', 'Turing', 'Grace', 'Linus', 'Margaret'].map((n, i) => ({ id: 'demo-' + n.toLowerCase(), name: n, workplace_id: i < 2 ? 'wp-a' : 'wp-b', is_super: i === 0 }));
+    lastBuildKey = '';
+    syncPeople(fakes, wps, null);
+    for (const p of people.values()) p.fake = true;
+  }
+  if (!sim.on) {
+    sim.scripts.clear();
+    for (const p of people.values()) if (p.fake || !connected) applyActivity(p, { state: 'idle' }, true);
+    if (sim.fake) { sim.fake = false; lastBuildKey = ''; loadState().catch(() => {}); }
+    else loadState().catch(() => {});
+  }
+  liveLabel();
+});
+
+/* ───────────────────────── theme + boot ───────────────────────── */
+new MutationObserver(() => {
+  const next = isDark() ? THEMES.dark : THEMES.light;
+  if (next !== theme) { theme = next; if (map) renderBackground(); renderRoster(true); renderLegend(); }
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+window.addEventListener('resize', resize);
+if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+setInterval(() => renderRoster(true), 5000);
+setInterval(() => { if (!sim.fake) loadState().catch(() => {}); }, 60000);
+
+renderLegend();
+loadState().then(() => { connect(); }).catch(() => { setLive('off', 'Offline'); setTimeout(() => loadState().then(connect).catch(() => {}), 3000); });
+if (new URLSearchParams(location.search).get('demo') === '1') simBtn.click();
+requestAnimationFrame(frame);
+})();
+</script>
+{% endblock %}
