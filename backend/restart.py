@@ -22,6 +22,9 @@ import shutil
 
 log = logging.getLogger(__name__)
 
+# Tests patch this to exercise both platform branches on one host.
+_IS_WINDOWS = sys.platform == 'win32'
+
 
 def restart_in_place(delay: float = 1.5) -> None:
     """Stop channels and the scheduler, free inherited FDs, and re-exec the server.
@@ -52,7 +55,7 @@ def restart_in_place(delay: float = 1.5) -> None:
     # new process can re-bind the same port. close_range(inheritable=False) keeps
     # the FDs in this process but stops them leaking into the new image; fall back
     # to closerange on older Python. POSIX-only — skip on Windows.
-    if sys.platform != 'win32':
+    if not _IS_WINDOWS:
         try:
             import resource
             maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
@@ -69,12 +72,74 @@ def restart_in_place(delay: float = 1.5) -> None:
     import config
     target = os.path.realpath(config.BASE_DIR)
     app_py = os.path.join(target, 'app.py')
-    venv_python = os.path.join(target, '.venv', 'bin', 'python')
+    if _IS_WINDOWS:
+        venv_python = os.path.join(target, '.venv', 'Scripts', 'python.exe')
+    else:
+        venv_python = os.path.join(target, '.venv', 'bin', 'python')
     python = venv_python if os.path.exists(venv_python) else sys.executable
 
-    log.info("Re-executing server process")
     os.chdir(target)
+    if _IS_WINDOWS:
+        _respawn_windows(python, app_py, target)
+        return  # unreachable: _respawn_windows exits the process
+
+    log.info("Re-executing server process")
     os.execv(python, [python, app_py])
+
+
+# Runs in a detached helper process on Windows: wait for the old server to
+# exit (releasing its port and PID lock), then start a fresh one.
+_WINDOWS_RESPAWN_SCRIPT = r'''
+import ctypes, os, subprocess, sys, time
+old_pid, python, app_py, log_path = int(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
+k32 = ctypes.windll.kernel32
+SYNCHRONIZE = 0x00100000
+h = k32.OpenProcess(SYNCHRONIZE, False, old_pid)
+if h:
+    k32.WaitForSingleObject(h, 30000)
+    k32.CloseHandle(h)
+time.sleep(0.5)
+env = dict(os.environ)
+for _k in ("EVONIC_PID_LOCK_HELD", "EVONIC_TESTING", "EVONIC_SMOKE_TEST"):
+    env.pop(_k, None)
+flags = 0x00000008 | 0x00000200 | 0x08000000  # DETACHED | NEW_PROCESS_GROUP | NO_WINDOW
+with open(log_path, "a") as out:
+    subprocess.Popen([python, app_py], cwd=os.path.dirname(app_py), env=env,
+                     stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
+                     close_fds=True, creationflags=flags)
+'''
+
+
+def _respawn_windows(python: str, app_py: str, target: str) -> None:
+    """Restart on Windows, where os.execv cannot replace the process image.
+
+    On Windows os.execv spawns a *new* process and exits the old one, so the
+    old listening socket can outlive it while the new server binds the same
+    port (Windows SO_REUSEADDR allows that) — requests then hang on the dead
+    socket. Instead, hand off to a detached helper and exit cleanly so the OS
+    releases the socket and PID lock before the replacement starts.
+    """
+    log_dir = os.path.join(target, 'shared', 'run')
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, 'server.log')
+    flags = 0x00000008 | 0x00000200 | 0x08000000
+    log.info("Restarting server process (Windows respawn)")
+    try:
+        subprocess.Popen(
+            [python, '-I', '-c', _WINDOWS_RESPAWN_SCRIPT,
+             str(os.getpid()), python, app_py, log_path],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, close_fds=True, creationflags=flags,
+        )
+    except Exception:
+        log.exception("Failed to spawn restart helper; server keeps running")
+        return
+    for handler in logging.getLogger().handlers:
+        try:
+            handler.flush()
+        except Exception:
+            pass
+    os._exit(0)
 
 
 def _systemd_command(action: str) -> None:

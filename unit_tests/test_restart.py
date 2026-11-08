@@ -27,12 +27,58 @@ class TestRestartInPlace(unittest.TestCase):
             'backend.channels.registry': registry,
             'backend.scheduler': sched_mod,
         }), \
+                mock.patch.object(restart, '_IS_WINDOWS', False), \
                 mock.patch.object(restart.time, 'sleep'), \
                 mock.patch.object(restart.os, 'execv', execv), \
                 mock.patch.object(restart.os, 'chdir'), \
                 mock.patch.object(restart.os, 'close_range', create=True), \
                 mock.patch.object(restart.os, 'closerange', create=True):
             restart.restart_in_place(delay=0)
+
+    def test_windows_respawns_instead_of_execv(self):
+        """On Windows os.execv leaves the old socket bound; use a helper + exit."""
+        channel_manager, scheduler, registry, sched_mod = self._patches()
+        execv = mock.MagicMock()
+        popen = mock.MagicMock()
+        exit_ = mock.MagicMock()
+        with mock.patch.dict(sys.modules, {
+            'backend.channels.registry': registry,
+            'backend.scheduler': sched_mod,
+        }), \
+                mock.patch.object(restart, '_IS_WINDOWS', True), \
+                mock.patch.object(restart.time, 'sleep'), \
+                mock.patch.object(restart.os, 'execv', execv), \
+                mock.patch.object(restart.os, 'chdir'), \
+                mock.patch.object(restart.os, 'makedirs'), \
+                mock.patch.object(restart.subprocess, 'Popen', popen), \
+                mock.patch.object(restart.os, '_exit', exit_):
+            restart.restart_in_place(delay=0)
+        channel_manager.stop_all.assert_called_once()
+        scheduler.shutdown.assert_called_once()
+        execv.assert_not_called()
+        popen.assert_called_once()
+        argv = popen.call_args[0][0]
+        self.assertEqual(argv[1:3], ['-I', '-c'])
+        self.assertEqual(argv[4], str(os.getpid()))
+        self.assertTrue(argv[6].endswith('app.py'))
+        exit_.assert_called_once_with(0)
+
+    def test_windows_keeps_running_if_helper_spawn_fails(self):
+        _, _, registry, sched_mod = self._patches()
+        exit_ = mock.MagicMock()
+        with mock.patch.dict(sys.modules, {
+            'backend.channels.registry': registry,
+            'backend.scheduler': sched_mod,
+        }), \
+                mock.patch.object(restart, '_IS_WINDOWS', True), \
+                mock.patch.object(restart.time, 'sleep'), \
+                mock.patch.object(restart.os, 'chdir'), \
+                mock.patch.object(restart.os, 'makedirs'), \
+                mock.patch.object(restart.subprocess, 'Popen',
+                                  side_effect=OSError('boom')), \
+                mock.patch.object(restart.os, '_exit', exit_):
+            restart.restart_in_place(delay=0)
+        exit_.assert_not_called()
 
     def test_stops_channels_scheduler_then_execs(self):
         channel_manager, scheduler, registry, sched_mod = self._patches()
