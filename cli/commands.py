@@ -223,8 +223,17 @@ def start_server(port=None, host=None, debug=None, daemon=False):
         time.sleep(1)
 
         if _is_running(proc.pid):
-            _write_pid(proc.pid)
-            print(f"Server started in background (PID: {proc.pid})")
+            # app.py records its own PID through its locked descriptor. Keep
+            # that one: on Windows proc.pid is only the venv launcher, and
+            # rewriting the locked file from here is a lock violation.
+            server_pid = _get_pid()
+            if not server_pid or not _is_running(server_pid):
+                server_pid = proc.pid
+                try:
+                    _write_pid(server_pid)
+                except OSError:
+                    pass
+            print(f"Server started in background (PID: {server_pid})")
             print(f"Host: {host}")
             print(f"Port: {port}")
             print(f"URL: http://{host if host != '0.0.0.0' else 'localhost'}:{port}")

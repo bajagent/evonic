@@ -22,8 +22,10 @@ from typing import Any, Dict, List, Optional
 DEFAULT_TIMEOUT = 300
 STATUS_TTL = 30
 # Above this size the system prompt goes through stdin instead of argv
-# (single argv strings are capped at ~128 KB on Linux).
-MAX_ARGV_SYSTEM_PROMPT = 100_000
+# (single argv strings are capped at ~128 KB on Linux). Windows caps the whole
+# command line at 32,767 characters, so keep well under that there; the rest
+# of argv (including the --json-schema payload) also counts toward the limit.
+MAX_ARGV_SYSTEM_PROMPT = 8_000 if os.name == "nt" else 100_000
 
 KNOWN_MODELS = [
     {"id": "claude-fable-5-1", "name": "Claude Fable 5.1"},

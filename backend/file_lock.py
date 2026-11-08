@@ -37,6 +37,13 @@ __all__ = ["AlreadyLockedError", "open_and_lock", "release"]
 # Tests monkeypatch this flag to exercise both branches on one host.
 _IS_WINDOWS = sys.platform == "win32"
 
+# Windows byte-range locks are mandatory: a locked byte cannot be read by any
+# other process. Locking byte 0 therefore hid the PID written at the start of
+# the PID file from ``evonic status``/``stop``. Lock a single byte far past any
+# real content instead (LockFile allows locking beyond EOF), so the lock still
+# guards the singleton while the file's contents stay readable.
+_WIN_LOCK_OFFSET = 1 << 30
+
 
 class AlreadyLockedError(OSError):
     """Raised when a non-blocking lock is already held by another owner.
@@ -89,7 +96,11 @@ def _lock(fd: int, blocking: bool) -> None:
 
         _ensure_lockable_size(fd)
         mode = msvcrt.LK_LOCK if blocking else msvcrt.LK_NBLCK
-        msvcrt.locking(fd, mode, 1)
+        os.lseek(fd, _WIN_LOCK_OFFSET, os.SEEK_SET)
+        try:
+            msvcrt.locking(fd, mode, 1)
+        finally:
+            os.lseek(fd, 0, os.SEEK_SET)
     else:
         import fcntl
 
@@ -104,7 +115,7 @@ def _unlock(fd: int) -> None:
     if _IS_WINDOWS:
         import msvcrt
 
-        os.lseek(fd, 0, os.SEEK_SET)
+        os.lseek(fd, _WIN_LOCK_OFFSET, os.SEEK_SET)
         msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
     else:
         import fcntl
