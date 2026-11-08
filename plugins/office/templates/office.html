@@ -1099,8 +1099,11 @@ function renderRoster(force) {
 function pushFeed(p, act) {
   const meta = STATE_META[act.state] || STATE_META.thinking;
   if (act.state === 'thinking' && !act.detail) return;   // too chatty
-  const li = document.createElement('li');
   const text = act.detail ? act.detail : meta.label;
+  // final_answer and turn_complete both carry the reply; show it once.
+  if (p.lastFeedText === text && Date.now() - (p.lastFeedAt || 0) < 10000) return;
+  p.lastFeedText = text; p.lastFeedAt = Date.now();
+  const li = document.createElement('li');
   li.innerHTML = `<time>${clock(act.ts || Date.now())}</time><div class="txt" title="${esc(text)}"><span class="who" style="color:${meta.color}">${esc(p.name)}</span> ${esc(text)}</div>`;
   feedEl.prepend(li);
   while (feedEl.children.length > 60) feedEl.lastChild.remove();
