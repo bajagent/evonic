@@ -56,8 +56,10 @@ def test_lifecycle_events():
     assert map_event('agent_busy_changed', {'agent_id': 'a', 'busy': True})['state'] == 'thinking'
     assert map_event('agent_busy_changed', {'agent_id': 'a', 'busy': False})['state'] == 'idle'
     approval = map_event('approval_required', {
-        'agent_id': 'a', 'tool_name': 'bash', 'tool_args': {'command': 'rm -rf build'}})
+        'agent_id': 'a', 'tool_name': 'bash', 'tool_args': {'command': 'rm -rf build'},
+        'approval_id': 'ap-1'})
     assert approval['state'] == 'approval'
+    assert approval['approval_id'] == 'ap-1'
     assert 'rm -rf build' in approval['detail']
     assert map_event('approval_resolved', {'agent_id': 'a', 'decision': 'approved'})['state'] == 'thinking'
     reply = map_event('final_answer', {'agent_id': 'a', 'answer': 'All   done\nthanks'})

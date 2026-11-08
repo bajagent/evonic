@@ -151,6 +151,7 @@ def map_event(event_name: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]
         name = str(data.get('tool_name') or '')
         activity['state'] = 'approval'
         activity['tool_name'] = name
+        activity['approval_id'] = str(data.get('approval_id') or '')
         detail = tool_detail(name, data.get('tool_args') or {})
         activity['detail'] = _short(f"Needs approval: {name} {detail}".strip())
     elif event_name == 'approval_resolved':

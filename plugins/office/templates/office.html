@@ -63,13 +63,82 @@ html.dark .office-feed li { border-top-color: #1f2937; }
 .office-legend li { display: flex; align-items: center; gap: .45rem; }
 .office-legend canvas { width: 22px; height: 18px; image-rendering: pixelated; flex: none; }
 .office-hint { font-size: .7rem; color: #9ca3af; margin-top: .6rem; }
+
+/* ── chat drawer ── */
+.oc-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(28rem, 100vw); display: flex; flex-direction: column;
+  background: #fff; border-left: 1px solid #e5e7eb; box-shadow: -12px 0 32px rgba(0,0,0,.12); transform: translateX(100%); transition: transform .22s ease; }
+.oc-drawer.open { transform: none; }
+html.dark .oc-drawer { background: #0f172a; border-left-color: #1f2937; box-shadow: -12px 0 32px rgba(0,0,0,.45); }
+.oc-head { flex: none; display: flex; align-items: center; gap: .65rem; padding: .8rem 1rem; border-bottom: 1px solid #e5e7eb; }
+html.dark .oc-head { border-bottom-color: #1f2937; }
+.oc-head .office-swatch { grid-row: auto; width: 2rem; height: 2rem; }
+.oc-title { flex: 1 1 auto; min-width: 0; }
+.oc-title b { display: block; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oc-title .oc-sub { display: flex; align-items: center; gap: .4rem; font-size: .72rem; color: #6b7280; min-width: 0; }
+html.dark .oc-title .oc-sub { color: #9ca3af; }
+.oc-sub .oc-live { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oc-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; border-radius: .6rem; border: 0; background: transparent; color: inherit; cursor: pointer; text-decoration: none; font-size: 1.1rem; line-height: 1; }
+.oc-icon:hover { background: #f3f4f6; }
+html.dark .oc-icon:hover { background: #1f2937; }
+.oc-msgs { flex: 1 1 auto; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .55rem; font-size: .84rem; line-height: 1.45; }
+.oc-more { align-self: center; font-size: .72rem; }
+.oc-msg { max-width: 88%; padding: .55rem .75rem; border-radius: .9rem; word-wrap: break-word; overflow-wrap: anywhere; }
+.oc-msg.user { align-self: flex-end; background: #6366f1; color: #fff; border-bottom-right-radius: .3rem; white-space: pre-wrap; }
+.oc-msg.user.pending { opacity: .6; }
+.oc-msg.bot { align-self: flex-start; background: #f3f4f6; color: #111827; border-bottom-left-radius: .3rem; }
+html.dark .oc-msg.bot { background: #152a3a; color: #f3f4f6; border: 1px solid #1b394f; }
+.oc-msg.bot p { margin: .25rem 0; } .oc-msg.bot p:first-child { margin-top: 0; } .oc-msg.bot p:last-child { margin-bottom: 0; }
+.oc-msg.bot pre { background: rgba(0,0,0,.06); padding: .5rem; border-radius: .5rem; overflow-x: auto; font-size: .75rem; }
+html.dark .oc-msg.bot pre { background: rgba(0,0,0,.35); }
+.oc-msg.bot code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .78rem; }
+.oc-msg.bot ul, .oc-msg.bot ol { margin: .25rem 0; padding-left: 1.2rem; list-style: revert; }
+.oc-msg.bot a { color: #4f46e5; text-decoration: underline; }
+html.dark .oc-msg.bot a { color: #a5b4fc; }
+.oc-msg.mid { opacity: .85; font-size: .8rem; }
+.oc-sys { align-self: center; font-size: .7rem; color: #9ca3af; text-align: center; max-width: 90%; }
+.oc-tool { align-self: flex-start; max-width: 92%; font-size: .74rem; border: 1px solid #e5e7eb; border-radius: .6rem; background: #fafafa; }
+html.dark .oc-tool { border-color: #1f2937; background: #111827; }
+.oc-tool summary { cursor: pointer; padding: .3rem .6rem; list-style: none; display: flex; gap: .4rem; align-items: center; min-width: 0; }
+.oc-tool summary::-webkit-details-marker { display: none; }
+.oc-tool summary .fn { font-weight: 700; color: #6366f1; flex: none; }
+.oc-tool summary .arg { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4b5563; }
+html.dark .oc-tool summary .arg { color: #9ca3af; }
+.oc-tool .st { flex: none; font-size: .65rem; font-weight: 700; padding: 0 .35rem; border-radius: 999px; background: #e5e7eb; color: #374151; }
+.oc-tool .st.ok { background: #d1fae5; color: #065f46; } .oc-tool .st.err { background: #fee2e2; color: #991b1b; }
+html.dark .oc-tool .st { background: #374151; color: #e5e7eb; } html.dark .oc-tool .st.ok { background: rgba(16,185,129,.2); color: #6ee7b7; } html.dark .oc-tool .st.err { background: rgba(239,68,68,.2); color: #fca5a5; }
+.oc-tool pre { margin: 0; padding: .5rem .6rem; border-top: 1px solid #e5e7eb; max-height: 14rem; overflow: auto; white-space: pre-wrap; font-size: .7rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+html.dark .oc-tool pre { border-top-color: #1f2937; }
+.oc-status { flex: none; display: none; align-items: center; gap: .5rem; padding: .45rem 1rem; font-size: .74rem; border-top: 1px solid #f3f4f6; color: #4b5563; }
+html.dark .oc-status { border-top-color: #1f2937; color: #d1d5db; }
+.oc-status.show { display: flex; }
+.oc-status .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; animation: office-pulse 1.6s infinite; }
+.oc-status .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oc-approval { flex: none; display: none; margin: 0 1rem .6rem; padding: .65rem .75rem; border-radius: .75rem; border: 1px solid #fecaca; background: #fef2f2; font-size: .78rem; }
+html.dark .oc-approval { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.1); }
+.oc-approval.show { display: block; }
+.oc-approval .row { display: flex; gap: .5rem; margin-top: .5rem; }
+.oc-approval code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .72rem; word-break: break-word; }
+.oc-btn { font: inherit; font-size: .78rem; font-weight: 600; padding: .4rem .8rem; border-radius: .55rem; border: 1px solid transparent; cursor: pointer; }
+.oc-btn.ok { background: #16a34a; color: #fff; } .oc-btn.no { background: transparent; border-color: #d1d5db; color: inherit; }
+html.dark .oc-btn.no { border-color: #4b5563; }
+.oc-btn:disabled { opacity: .55; cursor: default; }
+.oc-compose { flex: none; display: flex; gap: .5rem; align-items: flex-end; padding: .75rem 1rem 1rem; border-top: 1px solid #e5e7eb; }
+html.dark .oc-compose { border-top-color: #1f2937; }
+.oc-compose textarea { flex: 1 1 auto; resize: none; min-height: 2.6rem; max-height: 9rem; padding: .6rem .75rem; border-radius: .75rem; border: 1px solid #d1d5db; background: #fff; color: inherit; font: inherit; font-size: .85rem; line-height: 1.4; }
+.oc-compose textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
+html.dark .oc-compose textarea { background: #111827; border-color: #374151; }
+.oc-send { flex: none; height: 2.6rem; padding: 0 1rem; border-radius: .75rem; border: 0; background: #6366f1; color: #fff; font-weight: 600; font-size: .85rem; cursor: pointer; }
+.oc-send:disabled { opacity: .5; cursor: default; }
+.oc-empty { margin: auto; text-align: center; color: #9ca3af; font-size: .8rem; max-width: 18rem; }
+.oc-err { align-self: center; font-size: .72rem; color: #dc2626; }
+@media (min-width: 1400px) { .office-wrap.chat-open { padding-right: 29.25rem; } }
 </style>
 
 <div class="office-wrap">
   <div class="office-head">
     <div class="grow">
       <h1>Office</h1>
-      <p>Every agent at its desk, live. Click someone to open their chat.</p>
+      <p>Every agent at its desk, live. Click someone to chat with them right here.</p>
     </div>
     <span id="office-live" class="office-live is-off">Connecting…</span>
     <button id="office-sim" class="office-btn" type="button" aria-pressed="false" title="Play made-up activity so you can see the animations. Nothing is sent to your agents.">Simulate activity</button>
@@ -99,6 +168,32 @@ html.dark .office-feed li { border-top-color: #1f2937; }
     </aside>
   </div>
 </div>
+
+<aside id="oc-drawer" class="oc-drawer" aria-label="Chat with agent" aria-hidden="true">
+  <div class="oc-head">
+    <canvas id="oc-swatch" class="office-swatch" width="16" height="16"></canvas>
+    <div class="oc-title">
+      <b id="oc-name"></b>
+      <div class="oc-sub"><span id="oc-chip" class="office-chip"></span><span id="oc-live" class="oc-live"></span></div>
+    </div>
+    <a id="oc-full" class="oc-icon" href="#" title="Open the full chat page">&#8599;</a>
+    <button id="oc-close" class="oc-icon" type="button" title="Close (Esc)" aria-label="Close chat">&times;</button>
+  </div>
+  <div id="oc-msgs" class="oc-msgs" aria-live="polite"></div>
+  <div id="oc-status" class="oc-status"><span class="dot"></span><span class="txt"></span></div>
+  <div id="oc-approval" class="oc-approval">
+    <b>Needs your approval</b>
+    <div><code id="oc-approval-detail"></code></div>
+    <div class="row">
+      <button class="oc-btn ok" type="button" data-decision="approve">Approve</button>
+      <button class="oc-btn no" type="button" data-decision="reject">Reject</button>
+    </div>
+  </div>
+  <form id="oc-form" class="oc-compose" autocomplete="off">
+    <textarea id="oc-input" rows="1" placeholder="Message…" aria-label="Message"></textarea>
+    <button id="oc-send" class="oc-send" type="submit">Send</button>
+  </form>
+</aside>
 
 <script>
 (function () {
@@ -618,6 +713,7 @@ function applyActivity(p, act, quiet) {
   p.ts = act.ts || Date.now();
   if (state !== prevState) { p.state = state; p.stateSince = Date.now(); }
   if (act.tool_name) p.toolName = act.tool_name;
+  p.approvalId = state === 'approval' ? (act.approval_id || p.approvalId || '') : '';
   const text = act.detail || '';
   if (text) { p.detail = text; if (!quiet) p.detailAt = Date.now(); }
   else if (state !== prevState && state !== 'idle' && state !== 'thinking') p.detail = '';
@@ -971,8 +1067,9 @@ function drawOverlay(now) {
     ctx.globalAlpha = 0.95;
     roundRect(ctx, cx - w / 2, by, w, h, h / 2);
     ctx.fillStyle = theme.label; ctx.fill();
-    ctx.strokeStyle = p.id === hoverId ? STATE_META[p.state].color : theme.labelBorder;
-    ctx.lineWidth = p.id === hoverId ? 2 * dpr : 1 * dpr; ctx.stroke();
+    const hot = p.id === hoverId || p.id === chat.id;
+    ctx.strokeStyle = hot ? STATE_META[p.state].color : theme.labelBorder;
+    ctx.lineWidth = hot ? 2 * dpr : 1 * dpr; ctx.stroke();
     ctx.fillStyle = STATE_META[p.state].color;
     ctx.beginPath(); ctx.arc(cx - w / 2 + fs * 0.65, by + h / 2, fs * 0.28, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = theme.labelText; ctx.textAlign = 'left';
@@ -1028,7 +1125,7 @@ function showTip(p, evt) {
   if (!p) { tip.classList.remove('show'); return; }
   const meta = STATE_META[p.state];
   const detail = p.detail ? `<div style="margin-top:.3rem"><code>${esc(p.detail)}</code></div>` : '';
-  tip.innerHTML = `<b>${esc(p.name)}</b> <span class="muted">· ${esc(meta.label)}${p.toolName && p.state !== 'idle' && p.state !== 'thinking' ? ' · ' + esc(p.toolName) : ''} · ${ago(p.ts)}</span>${detail}<div class="muted" style="margin-top:.35rem">Click to open chat</div>`;
+  tip.innerHTML = `<b>${esc(p.name)}</b> <span class="muted">· ${esc(meta.label)}${p.toolName && p.state !== 'idle' && p.state !== 'thinking' ? ' · ' + esc(p.toolName) : ''} · ${ago(p.ts)}</span>${detail}<div class="muted" style="margin-top:.35rem">Click to chat</div>`;
   const sr = stage.getBoundingClientRect();
   let x = evt.clientX - sr.left + 14, y = evt.clientY - sr.top + 14;
   tip.classList.add('show');
@@ -1045,7 +1142,7 @@ canvas.addEventListener('mousemove', e => {
   showTip(p, e);
 });
 canvas.addEventListener('mouseleave', () => { hoverId = null; tip.classList.remove('show'); renderRoster(); });
-canvas.addEventListener('click', e => { const p = personAt(e); if (p && !p.fake) window.location.href = '/agents/' + encodeURIComponent(p.id); });
+canvas.addEventListener('click', e => { const p = personAt(e); if (p) { tip.classList.remove('show'); openChat(p); } });
 
 /* ───────────────────────── side panel ───────────────────────── */
 function swatch(p) {
@@ -1082,7 +1179,7 @@ function renderRoster(force) {
       li.append(swatch(p), nm, dt);
       li.addEventListener('mouseenter', () => { hoverId = p.id; li.classList.add('is-hot'); });
       li.addEventListener('mouseleave', () => { hoverId = null; li.classList.remove('is-hot'); });
-      li.addEventListener('click', () => { if (!p.fake) window.location.href = '/agents/' + encodeURIComponent(p.id); });
+      li.addEventListener('click', () => openChat(p));
       row = { li, n, chip, dt, person: p, dark: isDark() };
       rosterRows.set(p.id, row);
     }
@@ -1091,8 +1188,8 @@ function renderRoster(force) {
     row.chip.textContent = meta.label;
     row.chip.style.background = meta.color;
     row.dt.textContent = p.detail ? p.detail : (p.state === 'idle' ? 'Nothing running · ' + ago(p.ts) : meta.label + ' · ' + ago(p.ts));
-    row.li.title = p.fake ? p.name : 'Open ' + p.name + '’s chat';
-    row.li.classList.toggle('is-hot', p.id === hoverId);
+    row.li.title = p.fake ? p.name : 'Chat with ' + p.name;
+    row.li.classList.toggle('is-hot', p.id === hoverId || p.id === chat.id);
     if (rosterEl.children[i] !== row.li) rosterEl.insertBefore(row.li, rosterEl.children[i] || null);
   });
 }
@@ -1159,6 +1256,7 @@ function onActivity(act) {
   applyActivity(p, act, false);
   pushFeed(p, act);
   renderRoster();
+  onChatActivity(p, act);
 }
 function connect() {
   if (es) es.close();
@@ -1230,6 +1328,281 @@ simBtn.addEventListener('click', () => {
   liveLabel();
 });
 
+/* ───────────────────────── chat drawer ───────────────────────── */
+// The web chat page talks to agents as user "web_test"; using the same id
+// keeps this drawer and the agent's own chat page on one conversation.
+const CHAT_USER = 'web_test';
+const $id = id => document.getElementById(id);
+const drawer = $id('oc-drawer'), ocMsgs = $id('oc-msgs'), ocInput = $id('oc-input'), ocSend = $id('oc-send');
+const ocStatus = $id('oc-status'), ocApproval = $id('oc-approval'), wrapEl = document.querySelector('.office-wrap');
+const chat = { id: null, gen: 0, lastTs: 0, oldestTs: 0, timer: 0, fastUntil: 0, sending: false, pending: [], tools: new Map() };
+const enc = encodeURIComponent;
+
+async function api(path, opts) {
+  const res = await fetch(path, Object.assign({ credentials: 'same-origin' }, opts || {}));
+  let body = null;
+  try { body = await res.json(); } catch (e) { /* not json */ }
+  if (!res.ok) { const err = new Error((body && (body.error || body.message)) || ('HTTP ' + res.status)); err.status = res.status; throw err; }
+  return body || {};
+}
+function sanitize(html) {
+  const doc = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html');
+  doc.querySelectorAll('script,style,iframe,object,embed,form,link,meta').forEach(n => n.remove());
+  doc.querySelectorAll('*').forEach(n => {
+    for (const a of [...n.attributes]) {
+      const v = a.value.trim().toLowerCase();
+      if (a.name.startsWith('on') || ((a.name === 'href' || a.name === 'src') && v.startsWith('javascript:'))) n.removeAttribute(a.name);
+    }
+    if (n.tagName === 'A') { n.setAttribute('target', '_blank'); n.setAttribute('rel', 'noopener noreferrer'); }
+  });
+  return doc.body.firstChild.innerHTML;
+}
+function markdown(text) {
+  const s = String(text || '');
+  if (window.marked && typeof window.marked.parse === 'function') {
+    try { return sanitize(window.marked.parse(s)); } catch (e) { /* fall through */ }
+  }
+  return esc(s).replace(/\n/g, '<br>');
+}
+function nearBottom() { return ocMsgs.scrollHeight - ocMsgs.scrollTop - ocMsgs.clientHeight < 160; }
+function toBottom() { ocMsgs.scrollTop = ocMsgs.scrollHeight; }
+
+function firstArg(params) {
+  if (!params || typeof params !== 'object') return String(params || '');
+  for (const k of ['command', 'cmd', 'script', 'path', 'file_path', 'query', 'url', 'target_agent_id', 'message', 'name']) {
+    if (params[k]) return String(params[k]).split('\n').find(l => l.trim()) || '';
+  }
+  const v = Object.values(params).find(x => typeof x === 'string' && x.trim());
+  return v ? v.split('\n')[0] : '';
+}
+function toolOutputText(content) {
+  let v = content;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return v; } }
+  if (v && typeof v === 'object') {
+    const parts = [];
+    if (v.stdout) parts.push(v.stdout);
+    if (v.stderr) parts.push('[stderr]\n' + v.stderr);
+    if (v.error && typeof v.error === 'string') parts.push('[error] ' + v.error);
+    if (parts.length) return parts.join('\n');
+    return JSON.stringify(v, null, 2);
+  }
+  return String(v);
+}
+
+/** Build the DOM node for one chatlog entry (or null to skip it). */
+function entryNode(e) {
+  const t = e.type;
+  if (t === 'user') {
+    const text = String(e.content || '');
+    const i = chat.pending.findIndex(pd => pd.text.trim() === text.trim());
+    if (i !== -1) { const pd = chat.pending.splice(i, 1)[0]; pd.el.classList.remove('pending'); pd.el.title = ''; return null; }
+    const d = document.createElement('div'); d.className = 'oc-msg user'; d.textContent = text; return d;
+  }
+  if (t === 'final' || t === 'intermediate') {
+    if (!e.content) return null;
+    const d = document.createElement('div'); d.className = 'oc-msg bot' + (t === 'intermediate' ? ' mid' : '');
+    d.innerHTML = markdown(e.content); return d;
+  }
+  if (t === 'tool_call') {
+    const det = document.createElement('details'); det.className = 'oc-tool';
+    det.innerHTML = `<summary><span class="fn">${esc(e.function || 'tool')}</span><span class="arg">${esc(firstArg(e.params))}</span><span class="st">running</span></summary>`;
+    if (e.id) chat.tools.set(e.id, det);
+    return det;
+  }
+  if (t === 'tool_output') {
+    const det = chat.tools.get(e.tool_call_id);
+    const pre = document.createElement('pre'); pre.textContent = toolOutputText(e.content).slice(0, 6000);
+    if (det) {
+      const st = det.querySelector('.st'); st.textContent = e.error ? 'error' : 'done'; st.className = 'st ' + (e.error ? 'err' : 'ok');
+      det.appendChild(pre); return null;
+    }
+    const lone = document.createElement('details'); lone.className = 'oc-tool';
+    lone.innerHTML = `<summary><span class="fn">${esc(e.function || 'tool')}</span><span class="arg">output</span><span class="st ${e.error ? 'err' : 'ok'}">${e.error ? 'error' : 'done'}</span></summary>`;
+    lone.appendChild(pre); return lone;
+  }
+  if (t === 'system') {
+    if (!e.content) return null;
+    const d = document.createElement('div'); d.className = 'oc-sys'; d.textContent = String(e.content).slice(0, 300); return d;
+  }
+  return null;
+}
+
+async function loadHistory(older) {
+  const gen = chat.gen, id = chat.id;
+  const q = new URLSearchParams({ user_id: CHAT_USER, limit: '30' });
+  if (older && chat.oldestTs) q.set('to_ts', String(chat.oldestTs));
+  let data;
+  try { data = await api(`/api/agents/${enc(id)}/chat?` + q); }
+  catch (err) { if (gen === chat.gen && !older) ocMsgs.innerHTML = `<div class="oc-err">Couldn’t load the conversation (${esc(err.message)}).</div>`; return; }
+  if (gen !== chat.gen) return;
+  const entries = data.entries || [];
+  const frag = document.createDocumentFragment();
+  if (data.has_more) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'office-btn oc-more'; b.textContent = 'Load earlier messages';
+    b.addEventListener('click', () => { b.disabled = true; loadHistory(true).then(() => b.remove()); });
+    frag.appendChild(b);
+  }
+  for (const e of entries) { const n = entryNode(e); if (n) frag.appendChild(n); }
+  if (entries.length) {
+    chat.oldestTs = entries[0].ts || chat.oldestTs;
+    chat.lastTs = Math.max(chat.lastTs, ...entries.map(e => e.ts || 0));
+  }
+  if (older) {
+    const prevH = ocMsgs.scrollHeight;
+    ocMsgs.prepend(frag);
+    ocMsgs.scrollTop += ocMsgs.scrollHeight - prevH;
+  } else {
+    ocMsgs.innerHTML = '';
+    if (!entries.length) {
+      const p = people.get(id);
+      ocMsgs.innerHTML = `<div class="oc-empty">No messages yet. Say hi to ${esc(p ? p.name : id)}.</div>`;
+    } else ocMsgs.appendChild(frag);
+    toBottom();
+  }
+}
+
+async function pollChat() {
+  const gen = chat.gen, id = chat.id;
+  if (!id) return;
+  try {
+    const q = new URLSearchParams({ user_id: CHAT_USER, limit: '50', after_ts: String(chat.lastTs || chat.openedAt) });
+    const data = await api(`/api/agents/${enc(id)}/chat?` + q);
+    if (gen !== chat.gen) return;
+    const entries = data.entries || [];
+    if (entries.length) {
+      const stick = nearBottom();
+      const empty = ocMsgs.querySelector('.oc-empty'); if (empty) empty.remove();
+      for (const e of entries) { const n = entryNode(e); if (n) ocMsgs.appendChild(n); }
+      chat.lastTs = Math.max(chat.lastTs, ...entries.map(e => e.ts || 0));
+      if (stick) toBottom();
+    }
+  } catch (err) { /* transient; the next poll retries */ }
+  if (gen === chat.gen) schedulePoll();
+}
+function schedulePoll(delay) {
+  clearTimeout(chat.timer);
+  if (!chat.id) return;
+  const p = people.get(chat.id);
+  const active = (p && p.state !== 'idle') || Date.now() < chat.fastUntil;
+  chat.timer = setTimeout(pollChat, delay != null ? delay : (active ? 1500 : 6000));
+}
+
+function drawSwatchInto(c, p) {
+  const x = c.getContext('2d');
+  px(x, 0, 0, 16, 16, isDark() ? '#1f2937' : '#f3f4f6');
+  px(x, 4, 10, 8, 6, p.look.shirt); px(x, 4, 4, 8, 6, p.look.skin); px(x, 4, 3, 8, 2, p.look.hair);
+  px(x, 6, 6, 1, 2, '#1f2937'); px(x, 9, 6, 1, 2, '#1f2937');
+  if (p.isSuper) { px(x, 5, 1, 6, 1, '#facc15'); px(x, 5, 0, 1, 1, '#facc15'); px(x, 8, 0, 1, 1, '#facc15'); px(x, 10, 0, 1, 1, '#facc15'); }
+}
+function refreshChatHeader() {
+  const p = chat.id && people.get(chat.id);
+  if (!p) return;
+  const meta = STATE_META[p.state];
+  drawSwatchInto($id('oc-swatch'), p);
+  $id('oc-name').textContent = p.name;
+  const chip = $id('oc-chip'); chip.textContent = meta.label; chip.style.background = meta.color;
+  $id('oc-live').textContent = p.state === 'idle' ? '' : (p.detail || '');
+  const busy = p.state !== 'idle';
+  ocStatus.classList.toggle('show', busy);
+  if (busy) {
+    ocStatus.querySelector('.dot').style.background = meta.color;
+    ocStatus.querySelector('.txt').textContent = meta.label + (p.detail && p.state !== 'replying' ? ' — ' + p.detail : '…');
+  }
+  const needs = p.state === 'approval' && p.approvalId;
+  ocApproval.classList.toggle('show', !!needs);
+  if (needs) {
+    $id('oc-approval-detail').textContent = p.detail || p.toolName || '';
+    ocApproval.dataset.approvalId = p.approvalId;
+    ocApproval.querySelectorAll('button').forEach(b => { b.disabled = false; });
+  }
+}
+function onChatActivity(p, act) {
+  if (!chat.id || p.id !== chat.id) return;
+  refreshChatHeader();
+  // Pull new chatlog entries promptly when the agent does something visible.
+  if (['terminal', 'file', 'tool', 'visiting', 'replying', 'idle', 'approval'].includes(act.state)) schedulePoll(350);
+}
+
+function openChat(p) {
+  if (!p) return;
+  if (p.fake) { showTipText('Simulated agents can’t chat. Stop the simulation to talk to your real agents.'); return; }
+  if (chat.id !== p.id) {
+    chat.id = p.id; chat.gen++; chat.lastTs = 0; chat.oldestTs = 0; chat.openedAt = Date.now() - 1000;
+    chat.tools.clear(); chat.pending = [];
+    ocMsgs.innerHTML = '<div class="oc-empty">Loading conversation…</div>';
+    $id('oc-full').href = '/agents/' + enc(p.id);
+    ocInput.placeholder = 'Message ' + p.name + '…';
+    loadHistory(false).then(() => schedulePoll());
+    try { history.replaceState(null, '', location.pathname + '?agent=' + enc(p.id)); } catch (e) { /* ignore */ }
+  }
+  refreshChatHeader();
+  drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false');
+  wrapEl.classList.add('chat-open');
+  setTimeout(() => ocInput.focus(), 180);
+}
+function closeChat() {
+  chat.id = null; chat.gen++; clearTimeout(chat.timer);
+  drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true');
+  wrapEl.classList.remove('chat-open');
+  try { history.replaceState(null, '', location.pathname); } catch (e) { /* ignore */ }
+}
+function showTipText(text) {
+  tip.innerHTML = esc(text); tip.style.left = '12px'; tip.style.top = '12px'; tip.classList.add('show');
+  setTimeout(() => tip.classList.remove('show'), 2500);
+}
+
+function autosize() { ocInput.style.height = 'auto'; ocInput.style.height = Math.min(ocInput.scrollHeight, 144) + 'px'; }
+ocInput.addEventListener('input', autosize);
+ocInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $id('oc-form').requestSubmit(); }
+});
+$id('oc-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const text = ocInput.value.trim(), id = chat.id;
+  if (!text || !id || chat.sending) return;
+  const empty = ocMsgs.querySelector('.oc-empty'); if (empty) empty.remove();
+  const el = document.createElement('div'); el.className = 'oc-msg user pending'; el.textContent = text; el.title = 'Sending…';
+  ocMsgs.appendChild(el); toBottom();
+  const pd = { text, el }; chat.pending.push(pd);
+  ocInput.value = ''; autosize();
+  chat.sending = true; ocSend.disabled = true;
+  try {
+    await api(`/api/agents/${enc(id)}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, user_id: CHAT_USER }),
+    });
+    chat.fastUntil = Date.now() + 120000;
+    schedulePoll(600);
+  } catch (err) {
+    chat.pending = chat.pending.filter(x => x !== pd);
+    el.remove();
+    const warn = document.createElement('div'); warn.className = 'oc-err'; warn.textContent = 'Couldn’t send: ' + err.message;
+    ocMsgs.appendChild(warn); toBottom();
+    if (!ocInput.value) { ocInput.value = text; autosize(); }
+  } finally {
+    chat.sending = false; ocSend.disabled = false; ocInput.focus();
+  }
+});
+ocApproval.addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-decision]');
+  if (!btn || !chat.id) return;
+  const approvalId = ocApproval.dataset.approvalId;
+  ocApproval.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  try {
+    await api(`/api/agents/${enc(chat.id)}/chat/approve`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approval_id: approvalId, decision: btn.dataset.decision }),
+    });
+  } catch (err) {
+    if (err.status !== 404 && err.status !== 409) { showTipText('Approval failed: ' + err.message); ocApproval.querySelectorAll('button').forEach(b => { b.disabled = false; }); return; }
+  }
+  ocApproval.classList.remove('show');
+  const p = people.get(chat.id); if (p) p.approvalId = '';
+  schedulePoll(400);
+});
+$id('oc-close').addEventListener('click', closeChat);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && chat.id) closeChat(); });
+
 /* ───────────────────────── theme + boot ───────────────────────── */
 new MutationObserver(() => {
   const next = isDark() ? THEMES.dark : THEMES.light;
@@ -1241,7 +1614,11 @@ setInterval(() => renderRoster(true), 5000);
 setInterval(() => { if (!sim.fake) loadState().catch(() => {}); }, 60000);
 
 renderLegend();
-loadState().then(() => { connect(); }).catch(() => { setLive('off', 'Offline'); setTimeout(() => loadState().then(connect).catch(() => {}), 3000); });
+loadState().then(() => {
+  connect();
+  const want = new URLSearchParams(location.search).get('agent');
+  if (want && people.get(want)) openChat(people.get(want));
+}).catch(() => { setLive('off', 'Offline'); setTimeout(() => loadState().then(connect).catch(() => {}), 3000); });
 if (new URLSearchParams(location.search).get('demo') === '1') simBtn.click();
 requestAnimationFrame(frame);
 })();
