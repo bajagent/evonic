@@ -104,6 +104,25 @@ def _is_running(pid):
     """Check if a process with the given PID is actually running."""
     if pid is None:
         return False
+    if os.name == "nt":
+        # On Windows os.kill(pid, 0) is not a probe: signal 0 is CTRL_C_EVENT,
+        # so it sends Ctrl+C to the target's console group (shutting down a
+        # foreground server) or fails for a detached one. Query the process.
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        handle = kernel32.OpenProcess(0x1000, False, int(pid))  # QUERY_LIMITED_INFORMATION
+        if not handle:
+            return ctypes.get_last_error() == 5  # access denied: it exists
+        try:
+            code = wintypes.DWORD()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
+                return False
+            return code.value == 259  # STILL_ACTIVE
+        finally:
+            kernel32.CloseHandle(handle)
     try:
         os.kill(pid, 0)  # Signal 0 checks if process exists
         return True
@@ -132,7 +151,11 @@ def _write_pid(pid, fd=None):
 def _remove_pid():
     """Remove PID file."""
     if os.path.exists(PID_FILE):
-        os.remove(PID_FILE)
+        try:
+            os.remove(PID_FILE)
+        except PermissionError:
+            # Windows: a live server still holds the file open (and locked).
+            pass
 
 
 def _acquire_pid_lock():

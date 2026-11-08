@@ -363,14 +363,26 @@ def _container_name(session_id: str, agent_id: str = '') -> str:
     return f'{_CONTAINER_PREFIX}{safe_session}'
 
 
+def _decode_output(data) -> str:
+    if data is None:
+        return None
+    return data.decode('utf-8', errors='replace').replace('\r\n', '\n')
+
+
 def _docker(*args, input_data: str = None, timeout: int = 30) -> subprocess.CompletedProcess:
+    # Send stdin as raw UTF-8 bytes. A text-mode pipe on Windows rewrites "\n"
+    # as "\r\n", and the Linux bash/python inside the container then rejects
+    # the script (e.g. "syntax error: unexpected end of file").
     cmd = ['docker'] + list(args)
-    return subprocess.run(
+    result = subprocess.run(
         cmd,
-        input=input_data,
+        input=input_data.encode('utf-8') if input_data is not None else None,
         capture_output=True,
-        text=True,
         timeout=timeout,
+    )
+    return subprocess.CompletedProcess(
+        result.args, result.returncode,
+        _decode_output(result.stdout), _decode_output(result.stderr),
     )
 
 
@@ -381,13 +393,18 @@ def _docker_popen(*args) -> subprocess.Popen:
     in a polling loop to allow external kill via process_tracker.
     """
     cmd = ['docker'] + list(args)
-    return subprocess.Popen(
+    proc = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True,
+        encoding='utf-8',
+        errors='replace',
     )
+    # Keep "\n" as-is on the way into the container. Text-mode pipes on
+    # Windows otherwise write "\r\n", which breaks the Linux bash/python there.
+    proc.stdin.reconfigure(newline='\n')
+    return proc
 
 
 def _evict_lru() -> None:
@@ -632,8 +649,9 @@ class DockerBackend(ExecutionBackend):
         """
         effective = os.path.abspath(
             self._container_workspace if self._container_workspace else SANDBOX_WORKSPACE)
+        # Container paths are POSIX: convert Windows host separators.
         if path == effective or path.startswith(effective + os.sep):
-            return '/workspace' + path[len(effective):]
+            return '/workspace' + path[len(effective):].replace(os.sep, '/')
         # The host artifact registry is bind-mounted into the container at
         # /workspace/shared/agents/<id>/artifacts; translate host registry
         # paths to that container path (file tools resolve the sandbox path to
@@ -641,7 +659,7 @@ class DockerBackend(ExecutionBackend):
         if self._agent_id and self._artifacts_root:
             registry = os.path.join(self._artifacts_root, self._agent_id, 'artifacts')
             if path == registry or path.startswith(registry + os.sep):
-                rel = path[len(registry):]
+                rel = path[len(registry):].replace(os.sep, '/')
                 return f'/workspace/shared/agents/{self._agent_id}/artifacts{rel}'
         return path
 
