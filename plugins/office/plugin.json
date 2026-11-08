@@ -1,0 +1,28 @@
+{
+  "id": "office",
+  "name": "Office",
+  "version": "1.0.0",
+  "description": "A live, Sims-style office floor that shows what every agent is doing: thinking at its desk, running commands, editing files, visiting other agents, waiting for approval, or napping in the lounge.",
+  "author": "Evonic",
+  "enabled": true,
+  "events": [
+    "turn_begin",
+    "processing_started",
+    "agent_busy_changed",
+    "llm_thinking",
+    "tool_call_started",
+    "tool_executed",
+    "approval_required",
+    "approval_resolved",
+    "final_answer",
+    "turn_complete"
+  ],
+  "nav_items": [
+    {"label": "Office", "path": "/board/office"}
+  ],
+  "routes": [
+    {"path": "/board/office", "methods": ["GET"], "handler": "office_page"},
+    {"path": "/api/office/state", "methods": ["GET"], "handler": "office_state"},
+    {"path": "/api/office/stream", "methods": ["GET"], "handler": "office_stream"}
+  ]
+}
