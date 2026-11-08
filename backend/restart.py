@@ -102,7 +102,10 @@ time.sleep(0.5)
 env = dict(os.environ)
 for _k in ("EVONIC_PID_LOCK_HELD", "EVONIC_TESTING", "EVONIC_SMOKE_TEST"):
     env.pop(_k, None)
-flags = 0x00000008 | 0x00000200 | 0x08000000  # DETACHED | NEW_PROCESS_GROUP | NO_WINDOW
+# Own hidden console + own process group: Ctrl+C events from other consoles
+# cannot reach the server, and its console children (claude CLI) don't flash
+# windows. Don't add DETACHED_PROCESS: it disables CREATE_NO_WINDOW.
+flags = 0x00000200 | 0x08000000  # NEW_PROCESS_GROUP | NO_WINDOW
 with open(log_path, "a") as out:
     subprocess.Popen([python, app_py], cwd=os.path.dirname(app_py), env=env,
                      stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,

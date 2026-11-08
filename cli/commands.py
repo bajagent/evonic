@@ -240,7 +240,14 @@ def start_server(port=None, host=None, debug=None, daemon=False):
             env=env,
             stdout=open(os.path.join(PID_DIR, "server.log"), "a"),
             stderr=subprocess.STDOUT,
-            start_new_session=True,  # Detach from terminal
+            start_new_session=True,  # Detach from terminal (POSIX)
+            # Windows ignores start_new_session. Give the server its own hidden
+            # console and process group so a Ctrl+C in the launching console
+            # (or one sent to it by any other process) can't shut it down.
+            creationflags=(
+                subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+                if os.name == "nt" else 0
+            ),
         )
 
         time.sleep(1)
